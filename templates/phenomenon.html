@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>現象入力</title>
+    <script>
+        function updateSubcategories() {
+            const category = document.getElementById("category").value;
+            const subcategorySelect = document.getElementById("subcategory");
+            const subcategories = {{ categories | tojson }};
+            subcategorySelect.innerHTML = "";
+            if (category in subcategories) {
+                subcategories[category].forEach((subcategory) => {
+                    const option = document.createElement("option");
+                    option.value = subcategory;
+                    option.textContent = subcategory;
+                    subcategorySelect.appendChild(option);
+                });
+            }
+        }
+    </script>
+</head>
+<body>
+    <h1>現象入力</h1>
+    <form action="/phenomenon" method="post">
+        <label for="category">大分類:</label>
+        <select id="category" name="category" onchange="updateSubcategories()">
+            {% for category in categories %}
+            <option value="{{ category }}">{{ category }}</option>
+            {% endfor %}
+        </select>
+        <br><br>
+        <label for="subcategory">小分類:</label>
+        <select id="subcategory" name="subcategory">
+            <option value="">--選択してください--</option>
+        </select>
+        <br><br>
+        <label for="change_area">変更箇所:</label>
+        <select id="change_area" name="change_area">
+            {% for area in change_areas %}
+            <option value="{{ area }}">{{ area }}</option>
+            {% endfor %}
+        </select>
+        <br><br>
+        <button type="submit">追加</button>
+    </form>
+    <h2>追加された現象データ</h2>
+    <ul>
+        {% for category, subcategory, change_area in phenomena %}
+        <li>{{ category }} - {{ subcategory }} - {{ change_area }}</li>
+        {% endfor %}
+    </ul>
+<form action="/save_phenomena" method="post">
+    <!-- file_name を hidden input としてフォームに含める -->
+    <input type="hidden" name="file_name" value="{{ file_name }}">
+    <button type="submit">完了して保存</button>
+</form>
+</body>
+</html>
