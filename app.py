@@ -6,7 +6,22 @@ app.secret_key = 'your_secret_key'  # セッションを使うために必要な
 UPLOAD_FOLDER = "./uploaded_files"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-# 更新された選択肢データ
+# 各種選択肢データ
+countries = [
+    "中国", "インド", "パキスタン", "バングラデシュ", "インドネシア",
+    "タイ", "ベトナム", "アメリカ", "ウズベキスタン", "韓国", "台湾", "日本"
+]
+
+adjusters = ["サービス技師", "お客様"]
+ics_usages = [
+    "ICS設定値から調整", "既存設定値から調整", "ICS設定値から変更なし",
+    "ICS不使用（手動設定）", "不明"
+]
+
+running_judgments = ["合格", "不合格", "不明"]
+quality_judgments = ["合格", "不合格", "不明"]
+
+# 各種マッピングデータ
 category_mapping = {
     "稼動-経停台低減": [
         "リード揺動範囲", "綜絖枠内", "最終綜絖枠～経糸止装置間",
