@@ -26,37 +26,14 @@ subcategory_mapping = {
     "ムダ止まり": "False stop",
     "ロングピック（長尺）": "Long pick",
     "ショートピック（短尺）": "Short pick",
-    "ドラム～メイン間切れ": "Broken between drum and main nozzle",
-    "カッターミス": "Cutting failure",
-    "先端切れ (吹き切れ)": "Broken leading end",
-    "経糸緩み": "Warp loose on fabric",
-    "エアーマーク": "Air mark",
-    "サブノズルマーク": "Sub nozzle mark",
     "経筋": "Warp streaks",
     "布破れ": "Fabric tear",
     "地合い不良": "Irregular fabric texture",
-    "緯糸緩み(左側)": "Weft loose(LH)",
     "緯糸緩み(右側)": "Weft loose(RH)",
+    "エアーマーク": "Air mark",
+    "サブノズルマーク": "Sub nozzle mark",
     "筬打ち切れ": "Beating weft break",
     "テンプル切れ": "Temple weft break",
-    "フィラメント切れ": "Broken filament",
-    "繊維割れ": "Filament splitting",
-    "ビリ": "Weft overlapping",
-    "左右色差": "Color difference(LH and RH)",
-    "耳吊り": "Selvage pulling",
-    "耳緩み": "Selvage loose",
-    "耳フレア": "Selvage flare",
-    "前厚段-全幅": "Front thick Mark-Full width",
-    "後厚段-全幅": "Rear thick Mark-Full width",
-    "前薄段-全幅": "Front thin Mark-Full width",
-    "後薄段-全幅": "Rear thin Mark-Full width",
-    "前厚段-テンプル": "Front thick Mark-Temple",
-    "後厚段-テンプル": "Rear thick Mark-Temple",
-    "前薄段-テンプル": "Front thin Mark-Temple",
-    "後薄段-テンプル": "Rear thin Mark-Temple",
-    "前枕段": "Front Corrugated Mark",
-    "後枕段": "Rear Corrugated Mark",
-    "ループ段": "Loop Mark"
 }
 
 change_area_mapping = {
@@ -67,29 +44,19 @@ change_area_mapping = {
     "耳": "CC05",
     "緯入れ-メイン系": "CC06",
     "カッター": "CC07",
-    "開口角": "CC08",
-    "開口量": "CC09",
-    "枠高さ": "CC10",
-    "ドエル": "CC11",
-    "クロスタイミング": "CC12",
-    "エア圧力": "CC13",
-    "タオル": "CC14",
-    "緯入れ-サブ系": "CC15",
-    "張力": "CC16",
-    "Motor設定": "CC17",
-    "MARK設定": "CC18",
-    "T0-Tw": "CC19",
-    "Tw-Ctrl": "CC20",
-    "フィーラ設定": "CC21",
     "その他": "CC22"
 }
 
 countries = [
-    "中国", "インド", "パキスタン", "バングラデシュ", "インドネシア", 
-    "タイ", "ベトナム", "アメリカ", "ウズベキスタン", "韓国", "台湾", "日本"
+    "中国", "インド", "パキスタン", "バングラデシュ",
+    "インドネシア", "タイ", "ベトナム", "アメリカ", 
+    "ウズベキスタン", "韓国", "台湾", "日本"
 ]
 adjusters = ["サービス技師", "お客様"]
-ics_usages = ["ICS設定値から調整", "既存設定値から調整", "ICS設定値から変更なし", "ICS不使用（手動設定）", "不明"]
+ics_usages = [
+    "ICS設定値から調整", "既存設定値から調整", "ICS設定値から変更なし",
+    "ICS不使用（手動設定）", "不明"
+]
 running_judgments = ["合格", "不合格", "不明"]
 quality_judgments = ["合格", "不合格", "不明"]
 
@@ -131,13 +98,13 @@ def save_data():
 
         # フォームからの情報を保存
         basic_info = {
-            "customer": request.form["customer_name"],
-            "country": request.form["country"],
-            "reporter": request.form["reporter"],
-            "adjuster": request.form["adjuster"],
-            "ics_usage": request.form["ics_usage"],
-            "running": request.form["running"],
-            "quality": request.form["quality"]
+            "customer": request.form.get("customer_name", ""),
+            "country": request.form.get("country", ""),
+            "reporter": request.form.get("reporter", ""),
+            "adjuster": request.form.get("adjuster", ""),
+            "ics_usage": request.form.get("ics_usage", ""),
+            "running": request.form.get("running", ""),
+            "quality": request.form.get("quality", "")
         }
         session["basic_info"] = basic_info
         session["phenomena"] = []  # 現象データを初期化
