@@ -2,7 +2,7 @@ from flask import Flask, render_template, request, send_file, session
 import os
 
 app = Flask(__name__)
-app.secret_key = 'your_secret_key'
+app.secret_key = 'your_secret_key'  # セッションを使うために必要な設定
 UPLOAD_FOLDER = "./uploaded_files"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
@@ -134,6 +134,60 @@ def phenomenon_input():
         change_areas=change_areas,
         phenomena=session["phenomena"]
     )
+
+# ********************************************************************************
+# 現象データ保存処理
+# ********************************************************************************
+@app.route("/save_phenomena", methods=["POST"])
+def save_phenomena():
+    try:
+        file_name = session.get("current_file")
+        if not file_name:
+            return "エラー: ファイル名が指定されていません", 400
+
+        file_path = os.path.join(UPLOAD_FOLDER, file_name)
+        if not os.path.exists(file_path):
+            return f"エラー: ファイルが見つかりません ({file_path})", 400
+
+        # 元のファイル内容を読み込み
+        with open(file_path, "r", encoding="utf-8") as file:
+            original_content = file.readlines()
+
+        # セッションに保存されている基本情報と現象データを取得
+        basic_info = session.get("basic_info", {})
+        phenomenon_data = session.get("phenomena", [])
+
+        # 現象データの整形
+        phenomenon_lines = ['"JAT910-Phenomenon DATA -----------"\n']
+        for category, subcategory, change_area in phenomenon_data:
+            phenomenon_lines.append(f'"{category}","{subcategory}","{change_area}"\n')
+
+        # 基本情報の整形
+        basic_info_lines = ['"JAT700-MCARD-DATA file_info -----------"\n']
+        basic_info_lines.append(f'"Customer","{basic_info.get("customer", "")}"\n')
+        basic_info_lines.append(f'"Country","{basic_info.get("country", "")}"\n')
+        basic_info_lines.append(f'"Reporter","{basic_info.get("reporter", "")}"\n')
+        basic_info_lines.append(f'"Adjuster","{basic_info.get("adjuster", "")}"\n')
+        basic_info_lines.append(f'"ICS Usage","{basic_info.get("ics_usage", "")}"\n')
+        basic_info_lines.append(f'"Running","{basic_info.get("running", "")}"\n')
+        basic_info_lines.append(f'"Quality","{basic_info.get("quality", "")}"\n')
+
+        # 出力ファイルにデータを書き込む
+        processed_file_name = f"processed_{file_name}"  # 保存用の新しいファイル名
+        processed_file_path = os.path.join(UPLOAD_FOLDER, processed_file_name)
+        with open(processed_file_path, "w", encoding="utf-8") as file:
+            file.writelines(original_content)  # 元の内容
+            file.writelines(phenomenon_lines)  # 現象データを追加
+            file.writelines(basic_info_lines)  # 基本情報を追記
+
+        print("保存先ファイルのパス: ", processed_file_path)  # デバッグ用ログ
+
+        # 完了後、ファイルをダウンロード
+        return send_file(processed_file_path, as_attachment=True)
+
+    except Exception as e:
+        print("エラーが発生しました: ", str(e))
+        return "サーバーエラーにより処理が完了できませんでした", 500
 
 # ********************************************************************************
 # サーバーの起動
