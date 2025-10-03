@@ -1,10 +1,18 @@
 from flask import Flask, render_template, request, send_file, session
+from flask_session import Session  # セッション永続化のためのライブラリ
 import os
 
 app = Flask(__name__)
-app.secret_key = 'your_secret_key'  # セッションを使用するための設定
-UPLOAD_FOLDER = "./uploaded_files"
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)  # アップロード先フォルダを作成
+
+# アプリケーション設定
+app.secret_key = 'your_secret_key'
+app.config["SESSION_TYPE"] = "filesystem"  # サーバー側にセッションを保存
+app.config["SESSION_PERMANENT"] = False  # セッションの永続化を無効化
+Session(app)  # セッションを初期化
+
+# アップロード先ディレクトリの設定
+UPLOAD_FOLDER = os.path.join(os.path.dirname(__file__), "uploaded_files")  # 絶対パスを使用
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)  # フォルダが存在しない場合は作成
 
 # 選択肢データ
 countries = [
@@ -21,15 +29,15 @@ running_judgments = ["合格", "不合格", "不明"]
 quality_judgments = ["合格", "不合格", "不明"]
 
 category_mapping = {
-    "稫動-経停台低減": [
+    "稼動-経停台低減": [
         "リード揺動範囲", "綜絖枠内", "最終綜絖枠～経糸止装置間",
         "経糸止装置内", "経糸止装置～ビーム間"
     ],
-    "稫動-緯停台低減": [
+    "稼動-緯停台低減": [
         "入口くぐり", "入口ループ", "大ループ", "エンドループ", "エンドちぢれ",
         "先端飛びだし", "途中切れ", "捨耳掴まず", "上糸くぐり", "下糸くぐり",
         "ムダ止まり", "ロングピック（長尺）", "ショートピック（短尺）",
-        "ドラム～メイン間切れ", "カッターミス", "先端切れ (吹き切れ)", "張り切れ"
+        "ドラム～メイン間切れ", "カッターミス", "張り切れ"
     ],
     "品質-経方向": [
         "経糸緩み", "エアーマーク", "サブノズルマーク", "経筋", "布破れ", "地合い不良"
@@ -158,10 +166,8 @@ def save_phenomena():
         if not os.path.exists(file_path):
             raise Exception(f"元のファイルが存在しません: {file_path}")
 
-        # 保存用ファイルパス
+        # 処理済みファイルの保存先
         processed_file_path = os.path.join(UPLOAD_FOLDER, f"processed_{file_name}")
-
-        # デバッグログ
         print("元のファイルのパス:", file_path)
         print("保存先ファイルのパス:", processed_file_path)
 
@@ -170,16 +176,16 @@ def save_phenomena():
         for category, subcategory, change_area in session.get("phenomena", []):
             phenomenon_lines.append(f'"{category}","{subcategory}","{change_area}"\n')
 
-        # 元ファイルと統合したファイルを作成
+        # 元ファイル＋現象データをファイルに書き込む
         with open(processed_file_path, "w", encoding="utf-8") as processed_file:
             with open(file_path, "r", encoding="utf-8") as original_file:
-                processed_file.writelines(original_file.readlines())  # 元のファイル内容
-            processed_file.writelines(phenomenon_lines)  # 現象データを追記
+                processed_file.writelines(original_file.readlines())  # 元のファイル
+            processed_file.writelines(phenomenon_lines)  # 現象データを追加
 
-        # ファイルをクライアントに送信
+        print("ファイル保存完了:", processed_file_path)
         return send_file(processed_file_path, as_attachment=True)
     except Exception as e:
-        print("エラーが発生しました:", str(e))  # デバッグ用エラー出力
+        print("エラー:", str(e))
         return f"サーバーエラー: {str(e)}", 500
 
 # ********************************************************************************
