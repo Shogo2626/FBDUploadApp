@@ -2,11 +2,11 @@ from flask import Flask, render_template, request, send_file, session
 import os
 
 app = Flask(__name__)
-app.secret_key = 'your_secret_key'  # セッションを使用するための設定
+app.secret_key = 'your_secret_key'  # セッションを使用する設定
 UPLOAD_FOLDER = "./uploaded_files"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-# 各種マッピングデータ
+# マッピングデータ
 subcategory_mapping = {
     "リード揺動範囲": "Within reed oscillation range",
     "綜絖枠内": "Within heald frame",
@@ -96,7 +96,7 @@ def save_data():
         if not file_name:
             raise Exception("エラー: ファイルがセッションに存在しません")
 
-        # フォームからの情報を保存
+        # フォームからの情報を取得
         basic_info = {
             "customer": request.form.get("customer_name", ""),
             "country": request.form.get("country", ""),
@@ -112,8 +112,9 @@ def save_data():
         # 現象データ入力画面を表示
         return render_template(
             "phenomenon.html",
-            categories=subcategory_mapping.keys(),
-            change_areas=change_area_mapping.keys(),
+            file_name=file_name,
+            categories=list(subcategory_mapping.keys()),  # dict_keys からリストに変換
+            change_areas=list(change_area_mapping.keys()),  # dict_keys からリストに変換
             phenomena=[]
         )
     except Exception as e:
@@ -140,8 +141,9 @@ def phenomenon_input():
 
         return render_template(
             "phenomenon.html",
-            categories=subcategory_mapping.keys(),
-            change_areas=change_area_mapping.keys(),
+            file_name=file_name,
+            categories=list(subcategory_mapping.keys()),  # dict_keys からリストに変換
+            change_areas=list(change_area_mapping.keys()),  # dict_keys からリストに変換
             phenomena=session["phenomena"]
         )
     except Exception as e:
