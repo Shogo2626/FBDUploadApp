@@ -5,20 +5,22 @@
     <title>現象入力</title>
 </head>
 <body>
-    <h1>現象データ入力</h1>
+    <h1>現象入力</h1>
     <form action="/phenomenon" method="post">
         <label for="category">大分類:</label>
         <select id="category" name="category" required>
-            {% for category in categories %}
+            {% for category, subcategories in categories.items() %}
             <option value="{{ category }}">{{ category }}</option>
             {% endfor %}
         </select><br><br>
 
         <label for="subcategory">小分類:</label>
-        <input type="text" id="subcategory" name="subcategory" required><br><br>
+        <select id="subcategory" name="subcategory" required>
+            <option value="">--選択してください--</option>
+        </select><br><br>
 
         <label for="change_area">変更箇所:</label>
-        <select id="change_area" name="change_area" required>
+        <select id="change_area" name="change_area">
             {% for area in change_areas %}
             <option value="{{ area }}">{{ area }}</option>
             {% endfor %}
@@ -27,15 +29,15 @@
         <button type="submit">追加</button>
     </form>
 
-    <h2>現在の現象データ</h2>
+    <h2>現在の入力された現象データ</h2>
     <ul>
-        {% for category, subcategory, change_area in phenomena %}
-        <li>{{ category }} - {{ subcategory }} - {{ change_area }}</li>
+        {% for cat, subcat, area in phenomena %}
+        <li>{{ cat }} - {{ subcat }} - {{ area }}</li>
         {% endfor %}
     </ul>
 
     <form action="/save_phenomena" method="post">
-        <button type="submit">完了</button>
+        <button type="submit">保存</button>
     </form>
 </body>
 </html>

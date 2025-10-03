@@ -7,6 +7,8 @@
 <body>
     <h1>基本情報入力</h1>
     <form action="/save" method="post">
+        <input type="hidden" name="file_name" value="{{ file_name }}">
+
         <label for="customer_name">お客様名:</label>
         <input type="text" id="customer_name" name="customer_name" required><br><br>
 
@@ -17,7 +19,7 @@
             {% endfor %}
         </select><br><br>
 
-        <label for="reporter">報告者名:</label>
+        <label for="reporter">報告者:</label>
         <input type="text" id="reporter" name="reporter" required><br><br>
 
         <label for="adjuster">調整者:</label>
@@ -48,7 +50,7 @@
             {% endfor %}
         </select><br><br>
 
-        <button type="submit">次へ</button>
+        <button type="submit">保存</button>
     </form>
 </body>
 </html>
