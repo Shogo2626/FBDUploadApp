@@ -103,7 +103,7 @@ def save_data():
     return render_template(
         "phenomenon.html",
         file_name=processed_file_name,
-        categories=category_mapping,
+        categories=categories,
         change_areas=change_areas,
         phenomena=session["phenomena"]
     )
@@ -127,7 +127,7 @@ def phenomenon_input():
     # 現象画面を再表示
     return render_template(
         "phenomenon.html",
-        categories=category_mapping,
+        categories=categories,
         change_areas=change_areas,
         phenomena=session["phenomena"],
         file_name=file_name  # file_nameをテンプレートに渡す
