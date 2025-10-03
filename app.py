@@ -60,22 +60,40 @@ change_areas = [
 # ********************************************************************************
 @app.route("/", methods=["GET", "POST"])
 def upload_file():
-    if request.method == "POST":
-        uploaded_file = request.files["file"]
-        if uploaded_file.filename != "":
-            file_path = os.path.join(UPLOAD_FOLDER, uploaded_file.filename)
-            uploaded_file.save(file_path)  # ファイルを保存
-            session["current_file"] = uploaded_file.filename  # セッション情報に保存
-            return render_template(
-                "form.html",  # 基本情報入力ページ
-                file_name=uploaded_file.filename,
-                countries=countries,
-                adjusters=adjusters,
-                ics_usages=ics_usages,
-                running_judgments=running_judgments,
-                quality_judgments=quality_judgments
-            )
-    return render_template("upload.html")  # ファイルアップロードページ
+    try:
+        if request.method == "POST":
+            uploaded_file = request.files["file"]  # アップロードされたファイルを取得
+
+            # デバッグ用にアップロードされた内容を表示
+            print("アップロードされたファイル名:", uploaded_file.filename)
+
+            if uploaded_file.filename != "":
+                file_path = os.path.join(UPLOAD_FOLDER, uploaded_file.filename)
+                # ファイルをサーバーに保存
+                uploaded_file.save(file_path)
+
+                # デバッグ用に保存したファイルパスを出力
+                print("ファイルが保存されました:", file_path)
+
+                # セッション変数にファイル名を保存
+                session["current_file"] = uploaded_file.filename
+                print("セッションに保存したファイル名:", session["current_file"])
+
+                # フォーム入力画面を表示
+                return render_template(
+                    "form.html",
+                    file_name=uploaded_file.filename,
+                    countries=countries,
+                    adjusters=adjusters,
+                    ics_usages=ics_usages,
+                    running_judgments=running_judgments,
+                    quality_judgments=quality_judgments
+                )
+        return render_template("upload.html")
+    except Exception as e:
+        # エラーが発生したときはログにエラー内容を出力
+        print("エラーが発生しました:", str(e))
+        return "エラーが発生しました", 500
 
 # ********************************************************************************
 # 基本情報の保存処理
