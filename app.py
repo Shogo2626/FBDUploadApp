@@ -1,5 +1,4 @@
 from flask import Flask, render_template, request, send_file, session
-from datetime import datetime
 import os
 
 app = Flask(__name__)
@@ -8,129 +7,199 @@ UPLOAD_FOLDER = "./uploaded_files"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 # マッピングデータ
-country_mapping = {
-    "中国": "156", "インド": "356", "パキスタン": "586", "バングラデシュ": "050",
-    "インドネシア": "360", "タイ": "764", "ベトナム": "704", "アメリカ": "840",
-    "ウズベキスタン": "860", "韓国": "410", "台湾": "158", "日本": "392"
+subcategory_mapping = {
+    "リード揺動範囲": "Within reed oscillation range",
+    "綜絖枠内": "Within heald frame",
+    "最終綜絖枠～経糸止装置間": "Between final heald frame and warp stop motion",
+    "経糸止装置内": "Within warp stop motion",
+    "経糸止装置～ビーム間": "Between warp stop motion and beam",
+    "入口くぐり": "Inlet underpass",
+    "入口ループ": "Loop at inlet",
+    "大ループ": "Large loop",
+    "エンドループ": "End loop",
+    "エンドちぢれ": "End curl",
+    "先端飛びだし": "Leading edge flying-out",
+    "途中切れ": "Broken halfway",
+    "捨耳掴まず": "Failure in catching waste selvage",
+    "上糸くぐり": "Passing above upper warp",
+    "下糸くぐり": "Passing above lower warp",
+    "ムダ止まり": "False stop",
+    "ロングピック（長尺）": "Long pick",
+    "ショートピック（短尺）": "Short pick",
+    "ドラム～メイン間切れ": "Broken between drum and main nozzle",
+    "カッターミス": "Cutting failure",
+    "先端切れ (吹き切れ)": "Broken leading end",
+    "経糸緩み": "Warp loose on fabric",
+    "エアーマーク": "Air mark",
+    "サブノズルマーク": "Sub nozzle mark",
+    "経筋": "Warp streaks",
+    "布破れ": "Fabric tear",
+    "地合い不良": "Irregular fabric texture",
+    "緯糸緩み(左側)": "Weft loose(LH)",
+    "緯糸緩み(右側)": "Weft loose(RH)",
+    "筬打ち切れ": "Beating weft break",
+    "テンプル切れ": "Temple weft break",
+    "フィラメント切れ": "Broken filament",
+    "繊維割れ": "Filament splitting",
+    "ビリ": "Weft overlapping",
+    "左右色差": "Color difference(LH and RH)",
+    "耳吊り": "Selvage pulling",
+    "耳緩み": "Selvage loose",
+    "耳フレア": "Selvage flare",
+    "前厚段-全幅": "Front thick Mark-Full width",
+    "後厚段-全幅": "Rear thick Mark-Full width",
+    "前薄段-全幅": "Front thin Mark-Full width",
+    "後薄段-全幅": "Rear thin Mark-Full width",
+    "前厚段-テンプル": "Front thick Mark-Temple",
+    "後厚段-テンプル": "Rear thick Mark-Temple",
+    "前薄段-テンプル": "Front thin Mark-Temple",
+    "後薄段-テンプル": "Rear thin Mark-Temple",
+    "前枕段": "Front Corrugated Mark",
+    "後枕段": "Rear Corrugated Mark",
+    "ループ段": "Loop Mark"
 }
 
-mapping_data = {
-    "Adjuster": {"サービス技師": "AD01", "お客様": "AD02"},
-    "ICS Usage": {
-        "ICS設定値から調整": "IU01", "既存設定値から調整": "IU02", 
-        "ICS設定値から変更なし": "IU03", "ICS不使用（手動設定）": "IU04", "不明": "IU05"
-    },
-    "Running Judge": {"合格": "RJ01", "不合格": "RJ02", "不明": "RJ03"},
-    "Quality Judge": {"合格": "QJ01", "不合格": "QJ02", "不明": "QJ03"}
+change_area_mapping = {
+    "バック": "CC01",
+    "ドロッパ": "CC02",
+    "イージング": "CC03",
+    "テンプル": "CC04",
+    "耳": "CC05",
+    "緯入れ-メイン系": "CC06",
+    "カッター": "CC07",
+    "開口角": "CC08",
+    "開口量": "CC09",
+    "枠高さ": "CC10",
+    "ドエル": "CC11",
+    "クロスタイミング": "CC12",
+    "エア圧力": "CC13",
+    "タオル": "CC14",
+    "緯入れ-サブ系": "CC15",
+    "張力": "CC16",
+    "Motor設定": "CC17",
+    "MARK設定": "CC18",
+    "T0-Tw": "CC19",
+    "Tw-Ctrl": "CC20",
+    "フィーラ設定": "CC21",
+    "その他": "CC22"
 }
 
-category_mapping = {
-    "稼動-経停台低減": ["リード揺動範囲", "綜絖枠内", "最終綜絖枠～経糸止装置間", "経糸止装置内", "経糸止装置～ビーム間"],
-    "稼動-緯停台低減": ["入口くぐり", "入口ループ", "大ループ", "エンドループ", "エンドちぢれ",
-                        "先端飛びだし", "途中切れ", "捨耳掴まず", "上糸くぐり", "下糸くぐり", 
-                        "ムダ止まり", "ロングピック（長尺）", "ショートピック（短尺）",
-                        "ドラム～メイン間切れ", "カッターミス", "先端切れ (吹き切れ)", "張り切れ"],
-    "品質-経方向": ["経糸緩み", "エアーマーク", "サブノズルマーク", "経筋", "布破れ", "地合い不良"],
-    "品質-緯方向": ["緯糸緩み(左側)", "緯糸緩み(右側)", "筬打ち切れ", "テンプル切れ", 
-                    "フィラメント切れ", "繊維割れ", "ビリ", "左右色差"],
-    "品質-耳欠点": ["耳吊り", "耳緩み", "耳フレア"],
-    "品質-止段": ["前厚段-全幅", "後厚段-全幅", "前薄段-全幅", "後薄段-全幅",
-                   "前厚段-テンプル", "後厚段-テンプル", "前薄段-テンプル", "後薄段-テンプル",
-                   "前枕段", "後枕段", "ループ段"]
-}
-
-change_areas = [
-    "バック", "ドロッパ", "イージング", "テンプル", "耳", 
-    "緯入れ-メイン系", "カッター", "開口角", "開口量", 
-    "枠高さ", "ドエル", "クロスタイミング", "エア圧力", 
-    "タオル", "緯入れ-サブ系", "張力", "Motor設定", 
-    "MARK設定", "T0-Tw", "Tw-Ctrl", "フィーラ設定", "その他"
-]
 
 # ********************************************************************************
 # ファイルアップロード画面
 # ********************************************************************************
 @app.route("/", methods=["GET", "POST"])
 def upload_file():
-    if request.method == "POST":
-        uploaded_file = request.files["file"]
-        if uploaded_file.filename:
-            file_path = os.path.join(UPLOAD_FOLDER, uploaded_file.filename)
-            uploaded_file.save(file_path)
-            session["current_file"] = uploaded_file.filename
-            return render_template("basic_info.html", file_name=uploaded_file.filename, countries=country_mapping.keys())
-    return render_template("upload.html")
+    try:
+        if request.method == "POST":
+            uploaded_file = request.files["file"]
+            if uploaded_file.filename:
+                file_path = os.path.join(UPLOAD_FOLDER, uploaded_file.filename)
+                uploaded_file.save(file_path)  # ファイルの保存
+                session["current_file"] = uploaded_file.filename
+                print("アップロードされたファイル:", session["current_file"])
+
+                # 基本情報入力画面（`form.html`）を表示
+                return render_template("form.html", file_name=uploaded_file.filename)
+        return render_template("upload.html")
+    except Exception as e:
+        print("エラー:", str(e))
+        return "サーバーエラー。詳細: " + str(e), 500
 
 # ********************************************************************************
 # 基本情報入力画面
 # ********************************************************************************
-@app.route("/basic_info", methods=["POST"])
-def basic_info():
-    file_name = session.get("current_file")
-    if not file_name:
-        return "エラー: ファイル名が見つかりません", 400
+@app.route("/save", methods=["POST"])
+def save_data():
+    try:
+        file_name = session.get("current_file")
+        if not file_name:
+            raise Exception("エラー: ファイル名がセッションに存在しません")
 
-    # 基本情報保存
-    basic_info = {
-        "customer": request.form["customer"],
-        "country": country_mapping.get(request.form["country"], ""),
-        "reporter": request.form["reporter"],
-        "adjuster": mapping_data["Adjuster"].get(request.form["adjuster"], ""),
-        "ics_usage": mapping_data["ICS Usage"].get(request.form["ics_usage"], ""),
-        "running": mapping_data["Running Judge"].get(request.form["running"], ""),
-        "quality": mapping_data["Quality Judge"].get(request.form["quality"], "")
-    }
-    session["basic_info"] = basic_info
-    session["phenomena"] = []  # 現象データ初期化
+        # 基本情報をカプチャ
+        basic_info = {
+            "customer": request.form["customer_name"],
+            "country": request.form["country"],
+            "reporter": request.form["reporter"],
+            "adjuster": request.form["adjuster"],
+            "ics_usage": request.form["ics_usage"],
+            "running": request.form["running"],
+            "quality": request.form["quality"]
+        }
+        session["basic_info"] = basic_info
+        session["phenomena"] = []  # 現象データを初期化
 
-    return render_template("phenomenon.html", categories=category_mapping, change_areas=change_areas, phenomena=[])
+        # 現象データ入力画面（`phenomenon.html`）を表示
+        return render_template(
+            "phenomenon.html",
+            categories=subcategory_mapping.keys(),
+            change_areas=change_area_mapping.keys(),
+            phenomena=[]
+        )
+    except Exception as e:
+        print("エラー:", str(e))
+        return "サーバーエラー。詳細: " + str(e), 500
 
 # ********************************************************************************
 # 現象データ入力画面
 # ********************************************************************************
 @app.route("/phenomenon", methods=["POST"])
 def phenomenon_input():
-    file_name = session.get("current_file")
-    if not file_name:
-        return "エラー: ファイル名が見つかりません", 400
+    try:
+        file_name = session.get("current_file")
+        if not file_name:
+            raise Exception("エラー: ファイル名がセッションに保存されていません")
 
-    category = request.form["category"]
-    subcategory = request.form["subcategory"]
-    change_area = request.form["change_area"]
-    phenomena = session.get("phenomena", [])
-    phenomena.append((category, subcategory, change_area))
-    session["phenomena"] = phenomena
+        # 現象データを追加
+        category = request.form["category"]
+        subcategory = request.form["subcategory"]
+        change_area = request.form["change_area"]
+        phenomena = session.get("phenomena", [])
+        phenomena.append((category, subcategory, change_area))
+        session["phenomena"] = phenomena
 
-    return render_template("phenomenon.html", categories=category_mapping, change_areas=change_areas, phenomena=session["phenomena"])
+        # 現象データ入力画面を再表示
+        return render_template(
+            "phenomenon.html",
+            categories=subcategory_mapping.keys(),
+            change_areas=change_area_mapping.keys(),
+            phenomena=session["phenomena"]
+        )
+    except Exception as e:
+        print("エラー:", str(e))
+        return "サーバーエラー。詳細: " + str(e), 500
 
 # ********************************************************************************
-# データ保存処理
+# 現象データ保存エンドポイント
 # ********************************************************************************
-@app.route("/save", methods=["POST"])
+@app.route("/save_phenomena", methods=["POST"])
 def save_phenomena():
-    file_name = session.get("current_file")
-    if not file_name:
-        return "エラー: ファイル名が見つかりません", 400
+    try:
+        file_name = session.get("current_file")
+        if not file_name:
+            return "エラー: ファイル名がセッションに存在しません", 400
 
-    phenomenon_data = session.get("phenomena", [])
-    basic_info = session.get("basic_info", {})
+        # マッピングとファイル保存処理
+        phenomenon_data = session.get("phenomena", [])
+        processed_file_path = os.path.join(UPLOAD_FOLDER, f"processed_{file_name}")
 
-    # ファイルのエンコーディングを検出
-    original_file_path = os.path.join(UPLOAD_FOLDER, file_name)
-    processed_file_path = f"processed_{file_name}"
+        phenomenon_lines = ['"JAT910-Phenomenon DATA -----------"\n']
+        for _, subcategory, change_area in phenomenon_data:
+            mapped_subcategory = subcategory_mapping.get(subcategory, subcategory)
+            mapped_change_area = change_area_mapping.get(change_area, "CC00")
+            phenomenon_lines.append(f'"{mapped_subcategory}","1","{mapped_change_area}"\n')
 
-    phenomenon_lines = ['"JAT910-Phenomenon DATA -----------"\n']
-    for category, subcategory, change_area in phenomenon_data:
-        mapped_subcategory = subcategory_mapping.get(subcategory, subcategory)
-        mapped_change_area = change_areas.index(change_area) + 1
-        phenomenon_lines.append(f'"{category}","{mapped_subcategory}","{mapped_change_area}"\n')
+        # 元ファイルとの結合書き込み
+        with open(processed_file_path, "w", encoding="utf-8") as processed_file:
+            with open(os.path.join(UPLOAD_FOLDER, file_name), "r", encoding="utf-8") as original_file:
+                processed_file.writelines(original_file.readlines())  # 元のファイル内容
+            processed_file.writelines(phenomenon_lines)
 
-    # ファイル書き込み処理
-    with open(original_file_path, "r", encoding="utf-8") as original, open(processed_file_path, "w", encoding="utf-8") as processed:
-        processed.writelines(original.readlines())  # 元データ
-        processed.writelines(phenomenon_lines)  # 現象データ
+        return send_file(processed_file_path, as_attachment=True)
 
-    return send_file(processed_file_path, as_attachment=True)
+    except Exception as e:
+        print("エラー:", str(e))
+        return "サーバーエラー。詳細: " + str(e), 500
 
 # ********************************************************************************
 # サーバー起動
