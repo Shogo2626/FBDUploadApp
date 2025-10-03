@@ -78,104 +78,78 @@ def upload_file():
     return render_template("upload.html")
 
 # ********************************************************************************
-# 基本情報入力ページの保存処理
+# ファイル内容を整理して保存
 # ********************************************************************************
-@app.route("/save", methods=["POST"])
-def save_data():
-    file_name = session.get("current_file")
-    file_path = os.path.join(UPLOAD_FOLDER, file_name)
-    customer_name = request.form["customer_name"]
-    country = request.form["country"]
-    reporter = request.form["reporter"]
-    adjuster = request.form["adjuster"]
-    ics_usage = request.form["ics_usage"]
-    running = request.form["running"]
-    quality = request.form["quality"]
+def process_and_save_phenomenon(file_path, phenomenon_data, basic_info):
+    """現象データと基本情報を処理してファイルを更新する"""
+    subcategory_dict = {}
+    for category, subcategory, change_area in phenomenon_data:
+        if subcategory not in subcategory_dict:
+            subcategory_dict[subcategory] = []
+        subcategory_dict[subcategory].append(change_area_mapping.get(change_area, "CC00"))
 
-    additional_data = [
-        f'"Customer","{customer_name}"',
-        f'"Country","{country}"',
-        f'"Reporter","{reporter}"',
-        f'"Adjuster","{adjuster}"',
-        f'"ICS Usage","{ics_usage}"',
-        f'"Running","{running}"',
-        f'"Quality","{quality}"'
-    ]
-    additional_content = "\n".join(additional_data)
+    # 現象データを英語でフォーマット
+    new_lines = ['"JAT910-Phenomenon DATA -----------"\n']
+    for subcategory, english_term in subcategory_mapping.items():
+        key_changes = ", ".join(f'"{code}"' for code in subcategory_dict.get(subcategory, []))
+        if key_changes:
+            new_lines.append(f'"{english_term}","1",{key_changes}\n')
+        else:
+            new_lines.append(f'"{english_term}","0","0"\n')
 
+    updated_content = []
     with open(file_path, "r", encoding="utf-8") as file:
-        file_content = file.read()
+        for line in file:
+            updated_content.append(line)
+            if "JAT700-MCARD-DATA file_info -----------" in line:
+                updated_content.append(f'"Customer","{basic_info["customer"]}"\n')
+                updated_content.append(f'"Country","{basic_info["country"]}"\n')
+                updated_content.append(f'"Reporter","{basic_info["reporter"]}"\n')
+                updated_content.append(f'"Adjuster","{basic_info["adjuster"]}"\n')
+                updated_content.append(f'"ICS Usage","{basic_info["ics_usage"]}"\n')
+                updated_content.append(f'"Running","{basic_info["running"]}"\n')
+                updated_content.append(f'"Quality","{basic_info["quality"]}"\n')
 
-    processed_file_name = f"processed_{file_name}"
-    processed_file_path = os.path.join(UPLOAD_FOLDER, processed_file_name)
+    # 新ファイルへ保存
+    output_path = f"processed_{os.path.basename(file_path)}"
+    with open(os.path.join(UPLOAD_FOLDER, output_path), "w", encoding="utf-8") as file:
+        file.writelines(new_lines)
+        file.writelines(updated_content)
 
-    with open(processed_file_path, "w", encoding="utf-8") as file:
-        file.write(additional_content + "\n" + file_content)
-
-    session["current_file"] = processed_file_name
-    session["phenomena"] = []
-    return render_template(
-        "phenomenon.html",
-        file_name=processed_file_name,
-        categories=category_mapping,
-        change_areas=change_areas,
-        phenomena=session["phenomena"]
-    )
-
-# ********************************************************************************
-# 現象入力画面
-# ********************************************************************************
-@app.route("/phenomenon", methods=["GET", "POST"])
-def phenomenon_input():
-    file_name = session.get("current_file")
-    if not file_name:
-        return "エラー: ファイル名が提供されていません", 400
-
-    if request.method == "POST":
-        category = request.form["category"]
-        subcategory = request.form["subcategory"]
-        change_area = request.form["change_area"]
-        session["phenomena"].append((category, subcategory, change_area))
-        session.modified = True
-
-    return render_template(
-        "phenomenon.html",
-        categories=category_mapping,
-        change_areas=change_areas,
-        phenomena=session["phenomena"],
-        file_name=file_name
-    )
+    return output_path
 
 # ********************************************************************************
-# 現象データの保存
+# 現象データ保存エンドポイント
 # ********************************************************************************
 @app.route("/save_phenomena", methods=["POST"])
 def save_phenomena():
     file_name = session.get("current_file")
     if not file_name:
         return "エラー: ファイル名が提供されていません", 400
-
+    
     file_path = os.path.join(UPLOAD_FOLDER, file_name)
     if not os.path.exists(file_path):
         return f"エラー: ファイルが見つかりません ({file_path})", 400
-
-    with open(file_path, "r", encoding="utf-8") as file:
-        file_content = file.read()
-
-    phenomenon_lines = [
-        f'"{cat}","{subcat}","{area}"'
-        for cat, subcat, area in session.get("phenomena", [])
-    ]
-    phenomenon_content = "\n".join(phenomenon_lines)
-
-    processed_file_name = f"final_{file_name}"
-    processed_file_path = os.path.join(UPLOAD_FOLDER, processed_file_name)
-
-    with open(processed_file_path, "w", encoding="utf-8") as file:
-        file.write(phenomenon_content + "\n" + file_content)
-
-    session.pop("phenomena", None)
+    
+    # 基本情報を取得
+    basic_info = {
+        "customer": request.form["customer_name"],
+        "country": request.form["country"],
+        "reporter": request.form["reporter"],
+        "adjuster": request.form["adjuster"],
+        "ics_usage": request.form["ics_usage"],
+        "running": request.form["running"],
+        "quality": request.form["quality"]
+    }
+    # 現象データを取得
+    phenomenon_data = session.get("phenomena", [])
+    
+    # ファイルの処理と保存
+    processed_file_path = process_and_save_phenomenon(file_path, phenomenon_data, basic_info)
     return send_file(processed_file_path, as_attachment=True)
 
+# ********************************************************************************
+# サーバー起動
+# ********************************************************************************
 if __name__ == "__main__":
     app.run(debug=True)
