@@ -6,7 +6,7 @@ app.secret_key = 'your_secret_key'  # セッションを使用するための設
 UPLOAD_FOLDER = "./uploaded_files"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-# マッピングデータ
+# 各種マッピングデータ
 subcategory_mapping = {
     "リード揺動範囲": "Within reed oscillation range",
     "綜絖枠内": "Within heald frame",
@@ -84,9 +84,17 @@ change_area_mapping = {
     "その他": "CC22"
 }
 
+countries = [
+    "中国", "インド", "パキスタン", "バングラデシュ", "インドネシア", 
+    "タイ", "ベトナム", "アメリカ", "ウズベキスタン", "韓国", "台湾", "日本"
+]
+adjusters = ["サービス技師", "お客様"]
+ics_usages = ["ICS設定値から調整", "既存設定値から調整", "ICS設定値から変更なし", "ICS不使用（手動設定）", "不明"]
+running_judgments = ["合格", "不合格", "不明"]
+quality_judgments = ["合格", "不合格", "不明"]
 
 # ********************************************************************************
-# ファイルアップロード画面
+# ファイルアップロードページ
 # ********************************************************************************
 @app.route("/", methods=["GET", "POST"])
 def upload_file():
@@ -95,28 +103,33 @@ def upload_file():
             uploaded_file = request.files["file"]
             if uploaded_file.filename:
                 file_path = os.path.join(UPLOAD_FOLDER, uploaded_file.filename)
-                uploaded_file.save(file_path)  # ファイルの保存
+                uploaded_file.save(file_path)  # ファイル保存
                 session["current_file"] = uploaded_file.filename
-                print("アップロードされたファイル:", session["current_file"])
-
-                # 基本情報入力画面（`form.html`）を表示
-                return render_template("form.html", file_name=uploaded_file.filename)
+                return render_template(
+                    "form.html",
+                    file_name=uploaded_file.filename,
+                    countries=countries,
+                    adjusters=adjusters,
+                    ics_usages=ics_usages,
+                    running_judgments=running_judgments,
+                    quality_judgments=quality_judgments
+                )
         return render_template("upload.html")
     except Exception as e:
-        print("エラー:", str(e))
-        return "サーバーエラー。詳細: " + str(e), 500
+        print("エラー:", str(e))  # デバッグ情報
+        return "サーバーエラー: " + str(e), 500
 
 # ********************************************************************************
-# 基本情報入力画面
+# 基本情報入力ページ
 # ********************************************************************************
 @app.route("/save", methods=["POST"])
 def save_data():
     try:
         file_name = session.get("current_file")
         if not file_name:
-            raise Exception("エラー: ファイル名がセッションに存在しません")
+            raise Exception("エラー: ファイルがセッションに存在しません")
 
-        # 基本情報をカプチャ
+        # フォームからの情報を保存
         basic_info = {
             "customer": request.form["customer_name"],
             "country": request.form["country"],
@@ -129,7 +142,7 @@ def save_data():
         session["basic_info"] = basic_info
         session["phenomena"] = []  # 現象データを初期化
 
-        # 現象データ入力画面（`phenomenon.html`）を表示
+        # 現象データ入力画面を表示
         return render_template(
             "phenomenon.html",
             categories=subcategory_mapping.keys(),
@@ -138,19 +151,19 @@ def save_data():
         )
     except Exception as e:
         print("エラー:", str(e))
-        return "サーバーエラー。詳細: " + str(e), 500
+        return "サーバーエラー: " + str(e), 500
 
 # ********************************************************************************
-# 現象データ入力画面
+# 現象データ入力ページ
 # ********************************************************************************
 @app.route("/phenomenon", methods=["POST"])
 def phenomenon_input():
     try:
         file_name = session.get("current_file")
         if not file_name:
-            raise Exception("エラー: ファイル名がセッションに保存されていません")
+            raise Exception("エラー: ファイル名が見つかりません")
 
-        # 現象データを追加
+        # 現象データ入力を処理
         category = request.form["category"]
         subcategory = request.form["subcategory"]
         change_area = request.form["change_area"]
@@ -158,7 +171,6 @@ def phenomenon_input():
         phenomena.append((category, subcategory, change_area))
         session["phenomena"] = phenomena
 
-        # 現象データ入力画面を再表示
         return render_template(
             "phenomenon.html",
             categories=subcategory_mapping.keys(),
@@ -167,39 +179,36 @@ def phenomenon_input():
         )
     except Exception as e:
         print("エラー:", str(e))
-        return "サーバーエラー。詳細: " + str(e), 500
+        return "サーバーエラー: " + str(e), 500
 
 # ********************************************************************************
-# 現象データ保存エンドポイント
+# 現象データ保存
 # ********************************************************************************
 @app.route("/save_phenomena", methods=["POST"])
 def save_phenomena():
     try:
         file_name = session.get("current_file")
         if not file_name:
-            return "エラー: ファイル名がセッションに存在しません", 400
+            return "エラー: ファイル名が指定されていません", 400
 
-        # マッピングとファイル保存処理
         phenomenon_data = session.get("phenomena", [])
         processed_file_path = os.path.join(UPLOAD_FOLDER, f"processed_{file_name}")
 
         phenomenon_lines = ['"JAT910-Phenomenon DATA -----------"\n']
         for _, subcategory, change_area in phenomenon_data:
-            mapped_subcategory = subcategory_mapping.get(subcategory, subcategory)
+            mapped_subcategory = subcategory_mapping.get(subcategory, "Unknown")
             mapped_change_area = change_area_mapping.get(change_area, "CC00")
             phenomenon_lines.append(f'"{mapped_subcategory}","1","{mapped_change_area}"\n')
 
-        # 元ファイルとの結合書き込み
-        with open(processed_file_path, "w", encoding="utf-8") as processed_file:
-            with open(os.path.join(UPLOAD_FOLDER, file_name), "r", encoding="utf-8") as original_file:
-                processed_file.writelines(original_file.readlines())  # 元のファイル内容
-            processed_file.writelines(phenomenon_lines)
+        with open(processed_file_path, "w", encoding="utf-8") as output_file:
+            with open(os.path.join(UPLOAD_FOLDER, file_name), "r", encoding="utf-8") as input_file:
+                output_file.writelines(input_file.readlines())
+            output_file.writelines(phenomenon_lines)
 
         return send_file(processed_file_path, as_attachment=True)
-
     except Exception as e:
         print("エラー:", str(e))
-        return "サーバーエラー。詳細: " + str(e), 500
+        return "サーバーエラー: " + str(e), 500
 
 # ********************************************************************************
 # サーバー起動
