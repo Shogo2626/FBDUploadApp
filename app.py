@@ -20,13 +20,12 @@ ics_usages = [
 running_judgments = ["合格", "不合格", "不明"]
 quality_judgments = ["合格", "不合格", "不明"]
 
-# 更新された選択肢データ
 category_mapping = {
-    "稼動-経停台低減": [
+    "稫動-経停台低減": [
         "リード揺動範囲", "綜絖枠内", "最終綜絖枠～経糸止装置間",
         "経糸止装置内", "経糸止装置～ビーム間"
     ],
-    "稼動-緯停台低減": [
+    "稫動-緯停台低減": [
         "入口くぐり", "入口ループ", "大ループ", "エンドループ", "エンドちぢれ",
         "先端飛びだし", "途中切れ", "捨耳掴まず", "上糸くぐり", "下糸くぐり",
         "ムダ止まり", "ロングピック（長尺）", "ショートピック（短尺）",
@@ -55,7 +54,7 @@ change_areas = [
 ]
 
 # ********************************************************************************
-# アップロードページ
+# ファイルアップロード処理
 # ********************************************************************************
 @app.route("/", methods=["GET", "POST"])
 def upload_file():
@@ -66,6 +65,7 @@ def upload_file():
                 file_path = os.path.join(UPLOAD_FOLDER, uploaded_file.filename)
                 uploaded_file.save(file_path)  # ファイルを保存
                 session["current_file"] = uploaded_file.filename
+                print("アップロードされたファイル名:", session["current_file"])  # デバッグ用ログ
                 return render_template(
                     "form.html",
                     file_name=uploaded_file.filename,
@@ -81,16 +81,16 @@ def upload_file():
         return "サーバーエラー: " + str(e), 500
 
 # ********************************************************************************
-# 基本情報入力ページの保存処理
+# 基本情報入力処理
 # ********************************************************************************
 @app.route("/save", methods=["POST"])
 def save_data():
     try:
         file_name = session.get("current_file")
         if not file_name:
-            raise Exception("ファイル名がセッションに保存されていません")
+            raise Exception("ファイル名がセッションに存在しません")
 
-        # 基本情報をセッションに保存
+        # セッションに基本情報を保存
         basic_info = {
             "customer": request.form["customer_name"],
             "country": request.form["country"],
@@ -101,13 +101,14 @@ def save_data():
             "quality": request.form["quality"]
         }
         session["basic_info"] = basic_info
-        session["phenomena"] = []  # 現象データを初期化
+        session["phenomena"] = []  # 現象データも初期化
 
+        # 現象データ入力画面を表示
         return render_template(
             "phenomenon.html",
             file_name=file_name,
-            categories=category_mapping,  # 大分類と小分類の辞書データ
-            change_areas=change_areas,  # 変更箇所データ
+            categories=category_mapping,
+            change_areas=change_areas,
             phenomena=session["phenomena"]
         )
     except Exception as e:
@@ -115,7 +116,7 @@ def save_data():
         return "サーバーエラー: " + str(e), 500
 
 # ********************************************************************************
-# 現象データ入力ページ
+# 現象データ入力処理
 # ********************************************************************************
 @app.route("/phenomenon", methods=["POST"])
 def phenomenon_input():
@@ -124,7 +125,7 @@ def phenomenon_input():
         if not file_name:
             raise Exception("ファイル名がセッションに存在しません")
 
-        # フォーム送信されたデータをセッションに保存する
+        # 現象データをセッションに保存
         category = request.form["category"]
         subcategory = request.form["subcategory"]
         change_area = request.form["change_area"]
@@ -160,7 +161,11 @@ def save_phenomena():
         # 保存用ファイルパス
         processed_file_path = os.path.join(UPLOAD_FOLDER, f"processed_{file_name}")
 
-        # 現象データリストを処理
+        # デバッグログ
+        print("元のファイルのパス:", file_path)
+        print("保存先ファイルのパス:", processed_file_path)
+
+        # 現象データを処理
         phenomenon_lines = ['"JAT910-Phenomenon DATA -----------"\n']
         for category, subcategory, change_area in session.get("phenomena", []):
             phenomenon_lines.append(f'"{category}","{subcategory}","{change_area}"\n')
@@ -174,11 +179,11 @@ def save_phenomena():
         # ファイルをクライアントに送信
         return send_file(processed_file_path, as_attachment=True)
     except Exception as e:
-        print("エラー:", str(e))
-        return "サーバーエラー: " + str(e), 500
+        print("エラーが発生しました:", str(e))  # デバッグ用エラー出力
+        return f"サーバーエラー: {str(e)}", 500
 
 # ********************************************************************************
-# アプリケーションの起動
+# サーバー起動処理
 # ********************************************************************************
 if __name__ == "__main__":
     app.run(debug=True)
