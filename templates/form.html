@@ -13,7 +13,7 @@
         <input type="text" id="customer_name" name="customer_name" required><br><br>
 
         <label for="country">国名:</label>
-        <select id="country" name="country" required>
+        <select id="country" name="country">
             {% for country in countries %}
             <option value="{{ country }}">{{ country }}</option>
             {% endfor %}
@@ -21,36 +21,37 @@
 
         <label for="reporter">報告者名:</label>
         <input type="text" id="reporter" name="reporter" required><br><br>
-        
+
         <label for="adjuster">調整者:</label>
-        <select id="adjuster" name="adjuster" required>
+        <select id="adjuster" name="adjuster">
             {% for adjuster in adjusters %}
             <option value="{{ adjuster }}">{{ adjuster }}</option>
             {% endfor %}
         </select><br><br>
-        
+
         <label for="ics_usage">ICS使用状況:</label>
-        <select id="ics_usage" name="ics_usage" required>
-            {% for ics_usage in ics_usages %}
-            <option value="{{ ics_usage }}">{{ ics_usage }}</option>
+        <select id="ics_usage" name="ics_usage">
+            {% for ics in ics_usages %}
+            <option value="{{ ics }}">{{ ics }}</option>
             {% endfor %}
         </select><br><br>
-        
+
         <label for="running">稼働判定:</label>
-        <select id="running" name="running" required>
-            {% for running in running_judgments %}
-            <option value="{{ running }}">{{ running }}</option>
+        <select id="running" name="running">
+            {% for run in running_judgments %}
+            <option value="{{ run }}">{{ run }}</option>
             {% endfor %}
         </select><br><br>
-        
+
         <label for="quality">品質判定:</label>
-        <select id="quality" name="quality" required>
+        <select id="quality" name="quality">
             {% for quality in quality_judgments %}
             <option value="{{ quality }}">{{ quality }}</option>
             {% endfor %}
         </select><br><br>
-        
-        <button type="submit">保存</button>
+
+        <!-- Submit ボタン -->
+        <button type="submit">次へ</button>
     </form>
 </body>
 </html>
