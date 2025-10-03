@@ -2,14 +2,39 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>現象入力</title>
+    <title>現象データ入力</title>
+    <script>
+        // 小分類のドロップダウンを動的に生成する関数
+        function updateSubcategories() {
+            const category = document.getElementById("category").value; // 大分類の現在の値を取得
+            const subcategorySelect = document.getElementById("subcategory"); // 小分類のセレクトボックス
+            const subcategories = {{ categories | tojson | safe }}; // Python から渡されたデータ
+            
+            // 小分類のセレクトボックスを初期化
+            subcategorySelect.innerHTML = "<option value=''>--選択してください--</option>";
+
+            // 大分類に基づいて小分類を更新
+            if (subcategories[category]) {
+                subcategories[category].forEach(function(subcategory) {
+                    const option = document.createElement("option");
+                    option.value = subcategory;
+                    option.textContent = subcategory;
+                    subcategorySelect.appendChild(option);
+                });
+            }
+        }
+    </script>
 </head>
 <body>
-    <h1>現象入力</h1>
+    <h1>現象データ入力</h1>
+
+    <!-- 入力フォーム -->
     <form action="/phenomenon" method="post">
+        <input type="hidden" name="file_name" value="{{ file_name }}">
         <label for="category">大分類:</label>
-        <select id="category" name="category" required>
-            {% for category, subcategories in categories.items() %}
+        <select id="category" name="category" onchange="updateSubcategories()" required>
+            <option value="">--選択してください--</option>
+            {% for category in categories.keys() %}
             <option value="{{ category }}">{{ category }}</option>
             {% endfor %}
         </select><br><br>
@@ -20,7 +45,7 @@
         </select><br><br>
 
         <label for="change_area">変更箇所:</label>
-        <select id="change_area" name="change_area">
+        <select id="change_area" name="change_area" required>
             {% for area in change_areas %}
             <option value="{{ area }}">{{ area }}</option>
             {% endfor %}
@@ -29,15 +54,17 @@
         <button type="submit">追加</button>
     </form>
 
-    <h2>現在の入力された現象データ</h2>
+    <!-- データのリスト表示 -->
+    <h2>追加された現象データ</h2>
     <ul>
-        {% for cat, subcat, area in phenomena %}
-        <li>{{ cat }} - {{ subcat }} - {{ area }}</li>
+        {% for category, subcategory, change_area in phenomena %}
+        <li>{{ category }} - {{ subcategory }} - {{ change_area }}</li>
         {% endfor %}
     </ul>
 
+    <!-- ファイル保存 -->
     <form action="/save_phenomena" method="post">
-        <button type="submit">保存</button>
+        <button type="submit">保存して完了</button>
     </form>
 </body>
 </html>
