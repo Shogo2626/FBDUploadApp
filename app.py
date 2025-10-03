@@ -66,7 +66,6 @@ def upload_file():
                 file_path = os.path.join(UPLOAD_FOLDER, uploaded_file.filename)
                 uploaded_file.save(file_path)  # ファイルを保存
                 session["current_file"] = uploaded_file.filename
-                # 基本情報入力画面へ遷移
                 return render_template(
                     "form.html",
                     file_name=uploaded_file.filename,
@@ -82,7 +81,7 @@ def upload_file():
         return "サーバーエラー: " + str(e), 500
 
 # ********************************************************************************
-# 基本情報入力ページ
+# 基本情報入力ページの保存処理
 # ********************************************************************************
 @app.route("/save", methods=["POST"])
 def save_data():
@@ -91,7 +90,7 @@ def save_data():
         if not file_name:
             raise Exception("ファイル名がセッションに保存されていません")
 
-        # フォーム入力データを取得して保存
+        # 基本情報をセッションに保存
         basic_info = {
             "customer": request.form["customer_name"],
             "country": request.form["country"],
@@ -102,14 +101,14 @@ def save_data():
             "quality": request.form["quality"]
         }
         session["basic_info"] = basic_info
-        session["phenomena"] = []  # 初期化
+        session["phenomena"] = []  # 現象データを初期化
 
         return render_template(
             "phenomenon.html",
             file_name=file_name,
-            categories=category_mapping,  # 大分類と小分類の辞書
-            change_areas=change_areas,  # 変更箇所リスト
-            phenomena=session["phenomena"]  # 初期化された現象データ
+            categories=category_mapping,  # 大分類と小分類の辞書データ
+            change_areas=change_areas,  # 変更箇所データ
+            phenomena=session["phenomena"]
         )
     except Exception as e:
         print("エラー:", str(e))
@@ -123,9 +122,9 @@ def phenomenon_input():
     try:
         file_name = session.get("current_file")
         if not file_name:
-            raise Exception("ファイル名が見つかりません")
+            raise Exception("ファイル名がセッションに存在しません")
 
-        # フォーム送信で取得されたデータをセッションに保存
+        # フォーム送信されたデータをセッションに保存する
         category = request.form["category"]
         subcategory = request.form["subcategory"]
         change_area = request.form["change_area"]
@@ -145,35 +144,41 @@ def phenomenon_input():
         return "サーバーエラー: " + str(e), 500
 
 # ********************************************************************************
-# 現象データ保存
+# 現象データ保存処理
 # ********************************************************************************
 @app.route("/save_phenomena", methods=["POST"])
 def save_phenomena():
     try:
         file_name = session.get("current_file")
         if not file_name:
-            return "エラー: ファイル名が提供されていません", 400
+            raise Exception("ファイル名がセッションに存在しません")
 
-        phenomenon_data = session.get("phenomena", [])
+        file_path = os.path.join(UPLOAD_FOLDER, file_name)
+        if not os.path.exists(file_path):
+            raise Exception(f"元のファイルが存在しません: {file_path}")
+
+        # 保存用ファイルパス
         processed_file_path = os.path.join(UPLOAD_FOLDER, f"processed_{file_name}")
 
+        # 現象データリストを処理
         phenomenon_lines = ['"JAT910-Phenomenon DATA -----------"\n']
-        for category, subcategory, change_area in phenomenon_data:
+        for category, subcategory, change_area in session.get("phenomena", []):
             phenomenon_lines.append(f'"{category}","{subcategory}","{change_area}"\n')
 
-        # 元ファイルとデータを結合して保存
+        # 元ファイルと統合したファイルを作成
         with open(processed_file_path, "w", encoding="utf-8") as processed_file:
-            with open(os.path.join(UPLOAD_FOLDER, file_name), "r", encoding="utf-8") as original_file:
-                processed_file.writelines(original_file.readlines())
-            processed_file.writelines(phenomenon_lines)
+            with open(file_path, "r", encoding="utf-8") as original_file:
+                processed_file.writelines(original_file.readlines())  # 元のファイル内容
+            processed_file.writelines(phenomenon_lines)  # 現象データを追記
 
+        # ファイルをクライアントに送信
         return send_file(processed_file_path, as_attachment=True)
     except Exception as e:
         print("エラー:", str(e))
         return "サーバーエラー: " + str(e), 500
 
 # ********************************************************************************
-# サーバー起動
+# アプリケーションの起動
 # ********************************************************************************
 if __name__ == "__main__":
     app.run(debug=True)
