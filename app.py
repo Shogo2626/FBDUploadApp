@@ -3,30 +3,37 @@ import os
 
 app = Flask(__name__)
 
-# セッションのためのキー設定
+# セッション設定
 app.secret_key = 'your_secret_key'
 
-# アップロード先ディレクトリ
+# ファイル保存ディレクトリ
 UPLOAD_FOLDER = "./uploaded_files"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-# 選択肢データ
+# 各種プルダウンリストの選択肢データ
 countries = [
     "中国", "インド", "パキスタン", "バングラデシュ", "インドネシア",
     "タイ", "ベトナム", "アメリカ", "ウズベキスタン", "韓国", "台湾", "日本"
 ]
 
 adjusters = ["サービス技師", "お客様"]
-ics_usages = ["ICS設定値から調整", "既存設定値から調整", "ICS設定値から変更なし", "ICS不使用（手動設定）", "不明"]
+ics_usages = [
+    "ICS設定値から調整", "既存設定値から調整", "ICS設定値から変更なし",
+    "ICS不使用（手動設定）", "不明"
+]
 running_judgments = ["合格", "不合格", "不明"]
 quality_judgments = ["合格", "不合格", "不明"]
 
 category_mapping = {
-    "稼動-経停台低減": ["リード揺動範囲", "綜絖枠内", "最終綜絖枠～経糸止装置間", "経糸止装置内", "経糸止装置～ビーム間"],
+    "稼動-経停台低減": [
+        "リード揺動範囲", "綜絖枠内", "最終綜絖枠～経糸止装置間",
+        "経糸止装置内", "経糸止装置～ビーム間"
+    ],
     "稼動-緯停台低減": [
         "入口くぐり", "入口ループ", "大ループ", "エンドループ", "エンドちぢれ",
         "先端飛びだし", "途中切れ", "捨耳掴まず", "上糸くぐり", "下糸くぐり",
-        "ムダ止まり", "ロングピック（長尺）", "ショートピック（短尺）", "ドラム～メイン間切れ", "カッターミス"
+        "ムダ止まり", "ロングピック（長尺）", "ショートピック（短尺）",
+        "ドラム～メイン間切れ", "カッターミス"
     ]
 }
 
@@ -38,7 +45,7 @@ change_areas = [
 ]
 
 # ********************************************************************************
-# ファイルアップロード処理
+# アップロード処理
 # ********************************************************************************
 @app.route("/", methods=["GET", "POST"])
 def upload_file():
@@ -64,7 +71,7 @@ def upload_file():
         return "サーバーエラー: " + str(e), 500
 
 # ********************************************************************************
-# 基本情報入力処理
+# 基本情報の保存
 # ********************************************************************************
 @app.route("/save", methods=["POST"])
 def save_data():
@@ -73,26 +80,26 @@ def save_data():
         if not file_name:
             raise Exception("ファイル名がセッションに存在しません")
 
-        # 基本情報をセッションに保存
+        # セッションに基本情報を保存
         basic_info = {
-            "customer": request.form["customer_name"],
-            "country": request.form["country"],
-            "reporter": request.form["reporter"],
-            "adjuster": request.form["adjuster"],
-            "ics_usage": request.form["ics_usage"],
-            "running": request.form["running"],
-            "quality": request.form["quality"]
+            "Customer": request.form["customer_name"],
+            "Country": request.form["country"],
+            "Reporter": request.form["reporter"],
+            "Adjuster": request.form["adjuster"],
+            "ICS Usage": request.form["ics_usage"],
+            "Running": request.form["running"],
+            "Quality": request.form["quality"]
         }
         session["basic_info"] = basic_info
-        session["phenomena"] = []  # 現象データも初期化
+        session["phenomena"] = []  # 現象データを初期化
 
-        # 現象データ入力画面を表示
+        # 現象入力画面へ遷移
         return render_template(
             "phenomenon.html",
             file_name=file_name,
             categories=category_mapping,
             change_areas=change_areas,
-            phenomena=session.get("phenomena", [])
+            phenomena=session["phenomena"]
         )
     except Exception as e:
         print("エラー:", str(e))
@@ -108,7 +115,6 @@ def phenomenon_input():
         if not file_name:
             raise Exception("ファイル名がセッションに存在しません")
 
-        # フォームデータを取得して現象データを保存
         category = request.form["category"]
         subcategory = request.form["subcategory"]
         change_area = request.form["change_area"]
@@ -130,7 +136,7 @@ def phenomenon_input():
         return "サーバーエラー: " + str(e), 500
 
 # ********************************************************************************
-# 現象データ保存処理
+# 基本情報と現象データ保存処理
 # ********************************************************************************
 @app.route("/save_phenomena", methods=["POST"])
 def save_phenomena():
@@ -143,19 +149,32 @@ def save_phenomena():
         if not os.path.exists(file_path):
             raise Exception(f"元のファイルが存在しません: {file_path}")
 
-        # 現象データを取得
+        basic_info = session.get("basic_info", {})
         phenomena = session.get("phenomena", [])
         processed_file_path = os.path.join(UPLOAD_FOLDER, f"processed_{file_name}")
 
-        # 現象データを処理してファイルに保存
+        # 基本情報のフォーマット
+        basic_info_lines = [
+            '"Customer","{}"\n'.format(basic_info.get("Customer")),
+            '"Country","{}"\n'.format(basic_info.get("Country")),
+            '"Reporter","{}"\n'.format(basic_info.get("Reporter")),
+            '"Adjuster","{}"\n'.format(basic_info.get("Adjuster")),
+            '"ICS Usage","{}"\n'.format(basic_info.get("ICS Usage")),
+            '"Running","{}"\n'.format(basic_info.get("Running")),
+            '"Quality","{}"\n'.format(basic_info.get("Quality"))
+        ]
+
+        # 現象データのフォーマット
         phenomenon_lines = ['"JAT910-Phenomenon DATA -----------"\n']
         for category, subcategory, change_area in phenomena:
             phenomenon_lines.append(f'"{category}","{subcategory}","{change_area}"\n')
 
+        # ファイルにデータを保存
         with open(processed_file_path, "w", encoding="utf-8") as processed_file:
             with open(file_path, "r", encoding="utf-8") as original_file:
-                processed_file.writelines(original_file.readlines())
-            processed_file.writelines(phenomenon_lines)
+                processed_file.writelines(original_file.readlines())  # 元のファイルデータ
+            processed_file.writelines(basic_info_lines)  # 基本情報
+            processed_file.writelines(phenomenon_lines)  # 現象データ
 
         return send_file(processed_file_path, as_attachment=True)
     except Exception as e:
@@ -163,7 +182,7 @@ def save_phenomena():
         return f"サーバーエラー: {str(e)}", 500
 
 # ********************************************************************************
-# サーバー起動処理
+# アプリ起動
 # ********************************************************************************
 if __name__ == "__main__":
     app.run(debug=True)
