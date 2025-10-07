@@ -3,10 +3,69 @@
 <head>
     <meta charset="UTF-8">
     <title>ファイルアップロード</title>
+    <style>
+        /* ベースのスタイル */
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(to bottom, #4e79a7, #a0c4ff);
+            color: #333;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        /* フォームのスタイル */
+        form {
+            background: #ffffffdd;
+            padding: 20px 30px;
+            border-radius: 10px;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+            color: #4e79a7;
+            font-weight: bold;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 10px;
+            font-size: 1rem;
+        }
+
+        input[type="file"] {
+            padding: 10px;
+            font-size: 1rem;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            margin-bottom: 20px;
+            cursor: pointer;
+        }
+
+        button {
+            background: #4e79a7;
+            color: #fff;
+            font-size: 1rem;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background: #3a5e88;
+        }
+    </style>
 </head>
 <body>
-    <h1>ファイルアップロード</h1>
     <form action="/" method="post" enctype="multipart/form-data">
+        <h1>ファイルアップロード</h1>
         <label for="file">アップロードするファイルを選択してください:</label>
         <input type="file" name="file" id="file" required>
         <button type="submit">アップロード</button>
