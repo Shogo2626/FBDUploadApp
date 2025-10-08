@@ -82,7 +82,7 @@
         }
 
         .data-container li {
-            display: flex;
+            display: flex; /* テキストとボタンを横並びに */
             justify-content: space-between;
             align-items: center;
             padding: 10px;
@@ -93,10 +93,18 @@
             border-bottom: none;
         }
 
+        .data-container li div {
+            white-space: nowrap; /* 改行を禁止 */
+            overflow: hidden; /* はみ出した部分を非表示 */
+            text-overflow: ellipsis; /* 省略記号を追加 */
+        }
+
         .data-container li button {
             background-color: #e63946;
-            padding: 5px 10px;
-            font-size: 0.9rem;
+            padding: 3px 8px; /* ボタンを小さくする */
+            font-size: 0.8rem;
+            border-radius: 4px;
+            margin-left: auto; /* ボタンを右端に寄せる */
         }
 
         .data-container li button:hover {
@@ -144,8 +152,11 @@
             <ul>
                 {% for idx, (category, subcategory, change_area) in enumerate(phenomena) %}
                 <li>
-                    <span>{{ category }} - {{ subcategory }} - {{ change_area }}</span>
-                    <!-- 各データ削除用のボタン -->
+                    <!-- 修正部分: 改行なしで表示 -->
+                    <div>
+                        {{ category }} - {{ subcategory }} - {{ change_area }}
+                    </div>
+                    <!-- 削除ボタン -->
                     <form action="/delete_phenomenon" method="post" style="margin: 0;">
                         <input type="hidden" name="data_index" value="{{ idx }}">
                         <button type="submit">削除</button>
@@ -163,7 +174,8 @@
             </div>
         </div>
     </div>
- <!-- JavaScriptコードを追加 -->
+
+    <!-- JavaScriptコードを追加 -->
     <script>
         document.getElementById("category").addEventListener("change", function() {
             const category = this.value;
