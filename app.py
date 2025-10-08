@@ -152,23 +152,22 @@ def phenomenon_input():
         print("エラー:", str(e))
         return "サーバーエラー: " + str(e), 500
 
-# ********************************************************************************
-# 現象データ削除処理
-# ********************************************************************************
-@app.route("/remove_phenomenon/<int:index>", methods=["POST"])
-def remove_phenomenon(index):
-    try:
-        phenomena = session.get("phenomena", [])
-        if 0 <= index < len(phenomena):
-            # 対象の現象データを削除
-            del phenomena[index]
-            session["phenomena"] = phenomena
-        
-        # 成功を通知するため204ステータスを返す
-        return "", 204  
-    except Exception as e:
-        print("削除エラー:", str(e))
-        return f"サーバーエラー: {str(e)}", 500
+# 現象削除処理
+@app.route("/delete_phenomenon", methods=["POST"])
+def delete_phenomenon():
+    phenomena = session.get("phenomena", [])
+    data_index = int(request.form["data_index"])
+    if 0 <= data_index < len(phenomena):
+        del phenomena[data_index]
+    session["phenomena"] = phenomena
+    file_name = session.get("current_file", "")
+    return render_template(
+        "phenomenon.html",
+        file_name=file_name,
+        categories=category_mapping,
+        change_areas=change_areas,
+        phenomena=phenomena
+    )
 
 # ********************************************************************************
 # 基本情報と現象データ保存処理

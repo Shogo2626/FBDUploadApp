@@ -1,44 +1,167 @@
-<!-- 現象データ表示 -->
-<div class="data-container">
-    <h2>追加された現象データ</h2>
-    <ul id="phenomena-list">
-        {% for idx, (category, subcategory, change_area) in enumerate(phenomena) %}
-        <li id="phenomenon-{{ idx }}">
-            {{ category }} - {{ subcategory }} - {{ change_area }}
-            <button type="button" onclick="removePhenomenon({{ idx }})" style="margin-left: 10px;">削除</button>
-        </li>
-        {% endfor %}
-    </ul>
-    
-    <!-- 完了して保存ボタン -->
-    <div class="save-button-container">
-        <form action="/save_phenomena" method="post">
-            <input type="hidden" name="file_name" value="{{ file_name }}">
-            <button type="submit">完了して保存</button>
-        </form>
-    </div>
-</div>
-
-<script>
-    // 現象を削除する関数
-    function removePhenomenon(index) {
-        const phenomenonItem = document.getElementById(`phenomenon-${index}`);
-        const phenomenaList = document.getElementById("phenomena-list");
-
-        // リスト内の該当エントリを削除
-        if (phenomenonItem && phenomenaList) {
-            phenomenaList.removeChild(phenomenonItem);
-
-            // サーバーサイドで削除を保存するためのリクエスト送信
-            fetch(`/remove_phenomenon/${index}`, {
-                method: "POST",
-            }).then((response) => {
-                if (!response.ok) {
-                    console.error("削除に失敗しました");
-                } else {
-                    console.log("削除成功");
-                }
-            });
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>現象入力</title>
+    <style>
+        /* 全体のデザイン */
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(to bottom, #4e79a7, #a0c4ff);
+            color: #333;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start; /* 上部そろえ */
+            height: 100vh;
         }
-    }
-</script>
+
+        /* 2つのセクション（入力とデータを横並び） */
+        .container {
+            display: flex;
+            gap: 30px; /* セクション間の隙間 */
+            align-items: flex-start;
+            padding: 20px;
+            width: 90%;
+            max-width: 1200px;
+        }
+
+        form, .data-container {
+            background-color: #ffffffdd;
+            border-radius: 10px;
+            padding: 30px;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 600px;
+        }
+
+        h1, h2 {
+            text-align: center;
+            color: #4e79a7;
+        }
+
+        label {
+            display: block;
+            margin: 15px 0 5px;
+            font-weight: bold;
+        }
+
+        input[type="text"], select {
+            width: 100%;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 10px;
+            margin-bottom: 15px;
+        }
+
+        button {
+            background-color: #4e79a7;
+            color: #fff;
+            font-size: 1rem;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #3a5e88;
+        }
+
+        /* データのリスト */
+        .data-container ul {
+            list-style: none;
+            padding: 0;
+            margin: 20px 0;
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            background: #f9f9f9;
+            border-radius: 5px;
+        }
+
+        .data-container li {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .data-container li:last-child {
+            border-bottom: none;
+        }
+
+        .data-container li button {
+            background-color: #e63946;
+            padding: 5px 10px;
+            font-size: 0.9rem;
+        }
+
+        .data-container li button:hover {
+            background-color: #c72c3c;
+        }
+
+        /* 完了して保存 */
+        .save-button-container {
+            text-align: right;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 現象入力フォーム -->
+        <form action="/phenomenon" method="post">
+            <h1>現象入力</h1>
+            <label for="category">大分類:</label>
+            <select id="category" name="category" required>
+                <option value="">-- 選択してください --</option>
+                {% for category in categories %}
+                <option value="{{ category }}">{{ category }}</option>
+                {% endfor %}
+            </select>
+
+            <label for="subcategory">小分類:</label>
+            <select id="subcategory" name="subcategory" required>
+                <option value="">-- 選択してください --</option>
+            </select>
+
+            <label for="change_area">変更箇所:</label>
+            <select id="change_area" name="change_area" required>
+                {% for area in change_areas %}
+                <option value="{{ area }}">{{ area }}</option>
+                {% endfor %}
+            </select>
+
+            <button type="submit">追加</button>
+        </form>
+
+        <!-- 現象データ表示 -->
+        <div class="data-container">
+            <h2>追加された現象データ</h2>
+            <ul>
+                {% for idx, (category, subcategory, change_area) in enumerate(phenomena) %}
+                <li>
+                    <span>{{ category }} - {{ subcategory }} - {{ change_area }}</span>
+                    <!-- 各データ削除用のボタン -->
+                    <form action="/delete_phenomenon" method="post" style="margin: 0;">
+                        <input type="hidden" name="data_index" value="{{ idx }}">
+                        <button type="submit">削除</button>
+                    </form>
+                </li>
+                {% endfor %}
+            </ul>
+
+            <!-- 完了して保存ボタン -->
+            <div class="save-button-container">
+                <form action="/save_phenomena" method="post">
+                    <input type="hidden" name="file_name" value="{{ file_name }}">
+                    <button type="submit">完了して保存</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
