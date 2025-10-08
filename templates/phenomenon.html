@@ -13,150 +13,155 @@
             padding: 0;
             display: flex;
             justify-content: center;
-            align-items: center;
+            align-items: flex-start; /* 上部そろえ */
             height: 100vh;
         }
 
-        /* フォームコンテナー */
-        form {
+        /* 2つのセクション（入力とデータを横並び） */
+        .container {
+            display: flex;
+            gap: 30px; /* セクション間の隙間 */
+            align-items: flex-start;
+            padding: 20px;
+            width: 90%;
+            max-width: 1200px;
+        }
+
+        form, .data-container {
             background-color: #ffffffdd;
             border-radius: 10px;
-            padding: 30px 40px;
+            padding: 30px;
             box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
             width: 100%;
-            max-width: 600px; /* 最大幅 */
-            margin-bottom: 20px; /* 下に余白 */
+            max-width: 600px;
         }
 
         h1, h2 {
             text-align: center;
             color: #4e79a7;
-            margin-bottom: 20px;
-        }
-
-        h2 {
-            font-size: 1.25rem;
         }
 
         label {
             display: block;
-            margin-top: 10px;
-            margin-bottom: 5px;
+            margin: 15px 0 5px;
             font-weight: bold;
-            color: #333;
         }
 
         input[type="text"], select {
-            width: 100%; /* フル幅で入力フォーム */
-            padding: 10px;
-            margin-bottom: 15px;
+            width: 100%;
             border: 1px solid #ddd;
             border-radius: 5px;
-            font-size: 1rem;
+            padding: 10px;
+            margin-bottom: 15px;
         }
 
         button {
             background-color: #4e79a7;
             color: #fff;
+            font-size: 1rem;
             border: none;
             padding: 10px 20px;
-            font-size: 1rem;
             border-radius: 5px;
             cursor: pointer;
-            width: 100%; /* 幅を合わせる */
         }
 
         button:hover {
             background-color: #3a5e88;
         }
 
-        ul {
+        /* データのリスト */
+        .data-container ul {
             list-style: none;
             padding: 0;
-        }
-
-        li {
-            margin-bottom: 10px;
-            background: #f9f9f9;
+            margin: 20px 0;
+            max-height: 300px;
+            overflow-y: auto;
             border: 1px solid #ddd;
-            padding: 10px;
+            background: #f9f9f9;
             border-radius: 5px;
         }
 
-        .data-container {
-            background-color: #ffffffdd;
-            border-radius: 10px;
-            padding: 20px;
-            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-            max-width: 600px; /* 幅上限 */
+        .data-container li {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .data-container li:last-child {
+            border-bottom: none;
+        }
+
+        .data-container li button {
+            background-color: #e63946;
+            padding: 5px 10px;
+            font-size: 0.9rem;
+        }
+
+        .data-container li button:hover {
+            background-color: #c72c3c;
+        }
+
+        /* 完了して保存 */
+        .save-button-container {
+            text-align: right;
             margin-top: 20px;
         }
-
-        .data-container ul {
-            max-height: 200px; /* 高さを制限してスクロール可能に */
-            overflow-y: auto;
-        }
     </style>
-    <script>
-        /* 小分類を動的に更新する */
-        function updateSubcategories() {
-            const category = document.getElementById("category").value;
-            const subcategorySelect = document.getElementById("subcategory");
-            const subcategories = {{ categories | tojson }};
-            subcategorySelect.innerHTML = "";
-            if (category in subcategories) {
-                subcategories[category].forEach((subcategory) => {
-                    const option = document.createElement("option");
-                    option.value = subcategory;
-                    option.textContent = subcategory;
-                    subcategorySelect.appendChild(option);
-                });
-            }
-        }
-    </script>
 </head>
 <body>
-    <!-- 現象入力フォーム -->
-    <form action="/phenomenon" method="post">
-        <h1>現象入力</h1>
-        
-        <label for="category">大分類:</label>
-        <select id="category" name="category" onchange="updateSubcategories()" required>
-            <option value="">--選択してください--</option>
-            {% for category in categories %}
-            <option value="{{ category }}">{{ category }}</option>
-            {% endfor %}
-        </select>
-        
-        <label for="subcategory">小分類:</label>
-        <select id="subcategory" name="subcategory" required>
-            <option value="">--選択してください--</option>
-        </select>
-        
-        <label for="change_area">変更箇所:</label>
-        <select id="change_area" name="change_area" required>
-            {% for area in change_areas %}
-            <option value="{{ area }}">{{ area }}</option>
-            {% endfor %}
-        </select>
-        
-        <button type="submit">追加</button>
-    </form>
+    <div class="container">
+        <!-- 現象入力フォーム -->
+        <form action="/phenomenon" method="post">
+            <h1>現象入力</h1>
+            <label for="category">大分類:</label>
+            <select id="category" name="category" required>
+                <option value="">-- 選択してください --</option>
+                {% for category in categories %}
+                <option value="{{ category }}">{{ category }}</option>
+                {% endfor %}
+            </select>
 
-    <!-- 現象データ表示 -->
-    <div class="data-container">
-        <h2>追加された現象データ</h2>
-        <ul>
-            {% for category, subcategory, change_area in phenomena %}
-            <li>{{ category }} - {{ subcategory }} - {{ change_area }}</li>
-            {% endfor %}
-        </ul>
-        
-        <!-- 現象データの保存フォーム -->
-        <form action="/save_phenomena" method="post">
-            <input type="hidden" name="file_name" value="{{ file_name }}">
-            <button type="submit">完了して保存</button>
+            <label for="subcategory">小分類:</label>
+            <select id="subcategory" name="subcategory" required>
+                <option value="">-- 選択してください --</option>
+            </select>
+
+            <label for="change_area">変更箇所:</label>
+            <select id="change_area" name="change_area" required>
+                {% for area in change_areas %}
+                <option value="{{ area }}">{{ area }}</option>
+                {% endfor %}
+            </select>
+
+            <button type="submit">追加</button>
         </form>
+
+        <!-- 現象データ表示 -->
+        <div class="data-container">
+            <h2>追加された現象データ</h2>
+            <ul>
+                {% for idx, (category, subcategory, change_area) in enumerate(phenomena) %}
+                <li>
+                    <span>{{ category }} - {{ subcategory }} - {{ change_area }}</span>
+                    <!-- 各データ削除用のボタン -->
+                    <form action="/delete_phenomenon" method="post" style="margin: 0;">
+                        <input type="hidden" name="data_index" value="{{ idx }}">
+                        <button type="submit">削除</button>
+                    </form>
+                </li>
+                {% endfor %}
+            </ul>
+
+            <!-- 完了して保存ボタン -->
+            <div class="save-button-container">
+                <form action="/save_phenomena" method="post">
+                    <input type="hidden" name="file_name" value="{{ file_name }}">
+                    <button type="submit">完了して保存</button>
+                </form>
+            </div>
+        </div>
     </div>
 </body>
 </html>
