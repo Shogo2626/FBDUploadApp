@@ -17,9 +17,10 @@
             height: 100vh;
         }
 
+        /* 2つのセクション（入力とデータを横並び） */
         .container {
             display: flex;
-            gap: 30px;
+            gap: 30px; /* セクション間の隙間 */
             align-items: flex-start;
             padding: 20px;
             width: 90%;
@@ -68,12 +69,13 @@
             background-color: #3a5e88;
         }
 
+        /* データのリスト */
         .data-container ul {
             list-style: none;
             padding: 0;
-            margin: 0;
-            width: auto;
-            max-height: 300px;
+            margin: 0; /* 外側の余白を削除 */
+            width: auto; /* 内容に応じた幅に制限 */
+            max-height: 300px; /* スクロール領域 */
             overflow-y: auto;
             border: 1px solid #ddd;
             background: #f9f9f9;
@@ -83,10 +85,10 @@
         .data-container li {
             display: flex;
             align-items: center;
-            justify-content: space-between;
+            justify-content: flex-start;
             padding: 5px;
-            width: auto;
-            gap: 10px;
+            width: auto; /* 内容に応じた幅に制限 */
+            gap: 10px; /* 子要素間の間隔を追加 */
         }
 
         .data-container li div {
@@ -100,7 +102,7 @@
             padding: 0;
             display: inline-flex;
             align-items: center;
-            width: auto;
+            width: auto; /* フォーム幅制限 */
         }
 
         .data-container li button {
@@ -118,21 +120,32 @@
             background-color: #c72c3c;
         }
 
-        .data-container {
-            position: relative; /* 親要素の範囲を制限 */
+        /* 「完了して保存」を別セクションとして分割 */
+        .save-button-section {
+            display: flex; /* セクションをフレックスレイアウトに */
+            justify-content: center; /* ボタンを水平方向に中央揃え */
+            align-items: center; /* ボタンを垂直方向に中央揃え */
+            width: 100%; /* 親要素に合わせる */
+            padding: 20px; /* 上下左右に余裕を持たせる */
+            background-color: #ffffffdd; /* 背景色をマッチさせる */
+            border-radius: 10px; /* セクションの角を丸める */
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1); /* ボタンセクションの立体感 */
+            margin-top: 20px; /* 他のコンテンツと間を空ける */
         }
 
-        .save-button-container {
-            text-align: right; /* ボタンを右端に寄せる */
-            margin-top: 20px;
-            width: 100%; /* データコンテナの幅に収める */
-            box-sizing: border-box; /* ボタンのサイズが枠内に制約される */
+        .save-button-section button {
+            padding: 10px 30px; /* ボタンサイズを適切に */
+            font-size: 1.2rem; /* ボタンのフォントサイズを調整 */
+            background-color: #4e79a7; /* ボタンの背景色 */
+            color: #fff; /* ボタンのテキスト色 */
+            border: none; /* ボタンの枠を削除 */
+            border-radius: 5px; /* ボタンの角を丸める */
+            cursor: pointer; /* ホバー時のカーソルをポインターに */
+            transition: background-color 0.3s; /* ホバー時の色変更をスムーズに */
         }
 
-        .save-button-container button {
-            max-width: 100%; /* ボタンがはみ出さないようにする */
-            margin: 0 auto;
-            display: inline-block;
+        .save-button-section button:hover {
+            background-color: #3a5e88; /* ボタンのホバー時の背景色 */
         }
     </style>
 </head>
@@ -180,15 +193,36 @@
                 </li>
                 {% endfor %}
             </ul>
+        </div>
 
-            <!-- 完了して保存ボタン -->
-            <div class="save-button-container">
-                <form action="/save_phenomena" method="post">
-                    <input type="hidden" name="file_name" value="{{ file_name }}">
-                    <button type="submit">完了して保存</button>
-                </form>
-            </div>
+        <!-- 完了して保存ボタンのセクション -->
+        <div class="save-button-section">
+            <form action="/save_phenomena" method="post">
+                <input type="hidden" name="file_name" value="{{ file_name }}">
+                <button type="submit">完了して保存</button>
+            </form>
         </div>
     </div>
+
+    <!-- JavaScriptコードを追加 -->
+    <script>
+        document.getElementById("category").addEventListener("change", function() {
+            const category = this.value;
+            const subcategorySelect = document.getElementById("subcategory");
+
+            // 小分類をリセット
+            subcategorySelect.innerHTML = '<option value="">-- 選択してください --</option>';
+
+            const categories = {{ categories | tojson | safe }};
+            if (categories[category]) {
+                categories[category].forEach(function(subcategory) {
+                    const option = document.createElement("option");
+                    option.value = subcategory;
+                    option.textContent = subcategory;
+                    subcategorySelect.appendChild(option);
+                });
+            }
+        });
+    </script>
 </body>
 </html>
