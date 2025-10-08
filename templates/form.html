@@ -3,52 +3,116 @@
 <head>
     <meta charset="UTF-8">
     <title>基本情報入力</title>
+    <style>
+        /* 全体のデザイン */
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(to bottom, #4e79a7, #a0c4ff);
+            color: #333;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        /* フォームコンテナー */
+        form {
+            background-color: #ffffffdd;
+            border-radius: 10px;
+            padding: 30px 40px;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 600px; /* 最大幅 */
+        }
+
+        h1 {
+            margin-bottom: 20px;
+            text-align: center;
+            color: #4e79a7;
+            font-size: 1.5rem;
+        }
+
+        label {
+            display: block;
+            margin-top: 10px;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        input[type="text"], select {
+            width: 100%; /* フル幅で入力 */
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+
+        button {
+            background-color: #4e79a7;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            font-size: 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%; /* ボタンの幅をフル幅に */
+        }
+
+        button:hover {
+            background-color: #3a5e88;
+        }
+    </style>
 </head>
 <body>
-    <h1>基本情報入力</h1>
     <form action="/save" method="post">
         <input type="hidden" name="file_name" value="{{ file_name }}">
         
+        <h1>基本情報入力</h1>
+        
         <label for="customer_name">お客様名:</label>
-        <input type="text" id="customer_name" name="customer_name" required><br><br>
-
+        <input type="text" id="customer_name" name="customer_name" required>
+        
         <label for="country">国名:</label>
         <select id="country" name="country" required>
             {% for country in countries %}
             <option value="{{ country }}">{{ country }}</option>
             {% endfor %}
-        </select><br><br>
-
+        </select>
+        
         <label for="reporter">報告者名:</label>
-        <input type="text" id="reporter" name="reporter" required><br><br>
+        <input type="text" id="reporter" name="reporter" required>
         
         <label for="adjuster">調整者:</label>
         <select id="adjuster" name="adjuster" required>
             {% for adjuster in adjusters %}
             <option value="{{ adjuster }}">{{ adjuster }}</option>
             {% endfor %}
-        </select><br><br>
+        </select>
         
         <label for="ics_usage">ICS使用状況:</label>
         <select id="ics_usage" name="ics_usage" required>
             {% for ics_usage in ics_usages %}
             <option value="{{ ics_usage }}">{{ ics_usage }}</option>
             {% endfor %}
-        </select><br><br>
+        </select>
         
         <label for="running">稼働判定:</label>
         <select id="running" name="running" required>
             {% for running in running_judgments %}
             <option value="{{ running }}">{{ running }}</option>
             {% endfor %}
-        </select><br><br>
+        </select>
         
         <label for="quality">品質判定:</label>
         <select id="quality" name="quality" required>
             {% for quality in quality_judgments %}
             <option value="{{ quality }}">{{ quality }}</option>
             {% endfor %}
-        </select><br><br>
+        </select>
         
         <button type="submit">保存</button>
     </form>
