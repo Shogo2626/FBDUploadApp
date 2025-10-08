@@ -73,8 +73,8 @@
         .data-container ul {
             list-style: none;
             padding: 0;
-            margin: 20px 0;
-            max-height: 300px;
+            margin: 0; /* 外側の余白を削除*/
+            max-height: 300px; /* スクロール領域 */
             overflow-y: auto;
             border: 1px solid #ddd;
             background: #f9f9f9;
@@ -83,42 +83,43 @@
 
         .data-container li {
             display: flex;         /* テキストと削除ボタンを横並びに */
+            align-items: center;   /* ボタンとテキストを垂直中央揃え */
             justify-content: space-between;
-            align-items: center;
-            padding: 10px;
+            padding: 5px;          /* 内側の余白を縮小 */
             border-bottom: 1px solid #ddd;
         }
 
         .data-container li:last-child {
-            border-bottom: none;  /* 最後のアイテムの下線を削除 */
+            border-bottom: none;   /* 最後のアイテムの下線を削除 */
         }
 
         .data-container li div {
-            white-space: nowrap;  /* 改行を禁止 */
-            overflow: hidden;     /* はみ出した部分を非表示 */
-            text-overflow: ellipsis; /* 省略記号を追加 */
+            white-space: nowrap;   /* 改行禁止 */
+            overflow: hidden;      /* はみ出した部分を非表示 */
+            text-overflow: ellipsis; /* テキストを省略記号にする */
         }
 
         .data-container li form {
             margin: 0;             /* フォームの余白を削除 */
             padding: 0;            /* フォーム内の余白を削除 */
-            display: inline-block; /* フォーム内をコンパクトに配置 */
+            display: inline-block; /* フォームをコンパクトに表示 */
         }
 
         .data-container li button {
             background-color: #e63946;
-            padding: 3px 8px;      /* ボタンの内側の余白を調整 */
-            font-size: 0.8rem;     /* フォントサイズを調整 */
-            border-radius: 4px;    /* ボタンの角を丸くする */
-            margin: 0;             /* ボタン外側の余白を削除 */
-            border: none;          /* デフォルトの枠線を削除 */
-            outline: none;         /* フォーカス時の枠線を除去 */
+            padding: 3px 8px;      /* ボタン内側の隙間を調整 */
+            font-size: 0.8rem;
+            border-radius: 4px;    /* ボタンの角を少し丸くする */
+            margin: 0;             /* 外側の余白を削除 */
+            border: none;          /* ボタン枠線を削除 */
+            outline: none;         /* フォーカス時の枠線を削除 */
             width: auto;           /* ボタンの幅を内容に合わせる */
-            height: auto;          /* ボタンの高さを内容に依存させる */
+            height: auto;          /* ボタンの高さも適正化 */
+            box-sizing: border-box; /* サイズ計算を内部要素に応じて調整 */
         }
 
         .data-container li button:hover {
-            background-color: #c72c3c; /* ホバー時の色変更 */
+            background-color: #c72c3c; /* ボタンホバー時の色変更 */
         }
 
         /* 完了して保存 */
@@ -162,7 +163,7 @@
             <ul>
                 {% for idx, (category, subcategory, change_area) in enumerate(phenomena) %}
                 <li>
-                    <!-- 改行なしでデータを表示 -->
+                    <!-- 改行を防止してデータを表示 -->
                     <div>
                         {{ category }} - {{ subcategory }} - {{ change_area }}
                     </div>
