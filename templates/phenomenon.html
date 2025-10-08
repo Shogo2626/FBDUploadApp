@@ -13,14 +13,13 @@
             padding: 0;
             display: flex;
             justify-content: center;
-            align-items: flex-start; /* 上部そろえ */
+            align-items: flex-start;
             height: 100vh;
         }
 
-        /* 2つのセクション（入力とデータを横並び） */
         .container {
             display: flex;
-            gap: 30px; /* セクション間の隙間 */
+            gap: 30px;
             align-items: flex-start;
             padding: 20px;
             width: 90%;
@@ -69,13 +68,12 @@
             background-color: #3a5e88;
         }
 
-        /* データのリスト */
         .data-container ul {
             list-style: none;
             padding: 0;
-            margin: 0; /* 外側の余白を削除 */
-            width: auto; /* 内容に応じた幅に制限 */
-            max-height: 300px; /* スクロール領域 */
+            margin: 0;
+            width: auto;
+            max-height: 300px;
             overflow-y: auto;
             border: 1px solid #ddd;
             background: #f9f9f9;
@@ -85,14 +83,15 @@
         .data-container li {
             display: flex;
             align-items: center;
-            justify-content: flex-start;
+            justify-content: space-between;
             padding: 5px;
-            width: auto; /* 内容に応じた幅に制限 */
+            width: auto;
+            gap: 10px;
         }
 
         .data-container li div {
-            white-space: nowrap; 
-            overflow: hidden; 
+            white-space: nowrap;
+            overflow: hidden;
             text-overflow: ellipsis;
         }
 
@@ -101,16 +100,16 @@
             padding: 0;
             display: inline-flex;
             align-items: center;
-            width: auto; /* フォーム幅制限 */
+            width: auto;
         }
 
         .data-container li button {
             background-color: #e63946;
-            padding: 3px 8px; 
+            padding: 3px 8px;
             font-size: 0.8rem;
             border-radius: 4px;
             border: none;
-            width: auto; 
+            width: auto;
             height: auto;
             margin: 0;
         }
@@ -119,9 +118,21 @@
             background-color: #c72c3c;
         }
 
-        /* 完了して保存 */
+        .data-container {
+            position: relative; /* 親要素の範囲を制限 */
+        }
+
         .save-button-container {
-            text-align: right;
+            text-align: right; /* ボタンを右端に寄せる */
+            margin-top: 20px;
+            width: 100%; /* データコンテナの幅に収める */
+            box-sizing: border-box; /* ボタンのサイズが枠内に制約される */
+        }
+
+        .save-button-container button {
+            max-width: 100%; /* ボタンがはみ出さないようにする */
+            margin: 0 auto;
+            display: inline-block;
         }
     </style>
 </head>
@@ -179,26 +190,5 @@
             </div>
         </div>
     </div>
-
-    <!-- JavaScriptコードを追加 -->
-    <script>
-        document.getElementById("category").addEventListener("change", function() {
-            const category = this.value;
-            const subcategorySelect = document.getElementById("subcategory");
-
-            // 小分類をリセット
-            subcategorySelect.innerHTML = '<option value="">-- 選択してください --</option>';
-
-            const categories = {{ categories | tojson | safe }};
-            if (categories[category]) {
-                categories[category].forEach(function(subcategory) {
-                    const option = document.createElement("option");
-                    option.value = subcategory;
-                    option.textContent = subcategory;
-                    subcategorySelect.appendChild(option);
-                });
-            }
-        });
-    </script>
 </body>
 </html>
