@@ -82,7 +82,7 @@
         }
 
         .data-container li {
-            display: flex; /* テキストとボタンを横並びに */
+            display: flex;                    /* テキストとボタンを横並びに */
             justify-content: space-between;
             align-items: center;
             padding: 10px;
@@ -90,21 +90,24 @@
         }
 
         .data-container li:last-child {
-            border-bottom: none;
+            border-bottom: none;              /* 最後のアイテムの下線を削除 */
         }
 
-        .data-container li div {
-            white-space: nowrap; /* 改行を禁止 */
-            overflow: hidden; /* はみ出した部分を非表示 */
-            text-overflow: ellipsis; /* 省略記号を追加 */
+        .data-container li form {
+            margin: 0;                        /* フォーム全体の余白を削除 */
+            padding: 0;                       /* フォーム内の余白を削除 */
+            display: flex;                    /* フォーム内のボタンを横並び */
+            align-items: center;              /* ボタンを中央に寄せる */
         }
 
         .data-container li button {
             background-color: #e63946;
-            padding: 3px 8px; /* ボタンを小さくする */
+            padding: 3px 8px;                 /* ボタンの内側の余白を調整 */
             font-size: 0.8rem;
-            border-radius: 4px;
-            margin-left: auto; /* ボタンを右端に寄せる */
+            border-radius: 4px;               /* 角を少し丸く */
+            margin: 0;                        /* 外側の余白を削除 */
+            border: none;                     /* デフォルトの枠線を削除 */
+            outline: none;                    /* フォーカス時の枠線を除去 */
         }
 
         .data-container li button:hover {
