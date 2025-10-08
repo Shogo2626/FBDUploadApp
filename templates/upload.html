@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <title>ファイルアップロード</title>
     <style>
-        /* ベースのスタイル */
+        /* 基本設定 */
         body {
             font-family: Arial, sans-serif;
             background: linear-gradient(to bottom, #4e79a7, #a0c4ff);
@@ -17,58 +17,51 @@
             height: 100vh;
         }
 
-        /* フォームのスタイル */
+        /* 全体ボックス（フォーム） */
         form {
             background: #ffffffdd;
-            padding: 20px 30px;
+            padding: 30px 40px;
             border-radius: 10px;
             box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
             text-align: center;
+            position: relative;
+            width: 100%; /* フォームの横幅 */
+            max-width: 400px; /* 最大幅 */
         }
 
-        .header {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-bottom: 20px;
+        /* ロゴを中央に配置 */
+        .form-logo {
+            margin-bottom: 20px; /* タイトルとの間隔 */
         }
-
-        /* ロゴスタイル */
-        .header img {
-            height: 40px; /* ロゴの高さを調整 */
-            margin-right: 10px; /* タイトルとの間にスペースを追加 */
+        .form-logo img {
+            height: 50px; /* ロゴサイズを調整 */
         }
 
         h1 {
-            color: #4e79a7;
-            font-weight: bold;
             margin: 0;
+            font-size: 1.5rem;
+            color: #4e79a7;
+            margin-bottom: 20px; /* フォーム要素との余白 */
         }
 
+        /* 入力フォームやボタン */
         label {
             display: block;
             margin-bottom: 10px;
-            font-size: 1rem;
         }
 
         input[type="file"] {
-            padding: 10px;
-            font-size: 1rem;
-            border-radius: 5px;
-            border: 1px solid #ddd;
             margin-bottom: 20px;
-            cursor: pointer;
+            padding: 10px;
         }
 
         button {
             background: #4e79a7;
             color: #fff;
-            font-size: 1rem;
-            border: none;
             padding: 10px 20px;
+            border: none;
             border-radius: 5px;
             cursor: pointer;
-            transition: background-color 0.3s;
         }
 
         button:hover {
@@ -77,14 +70,14 @@
     </style>
 </head>
 <body>
-    <form action="/" method="post" enctype="multipart/form-data">
-        <div class="header">
-            <!-- Flaskで静的ファイルを利用 -->
+    <form method="post" enctype="multipart/form-data">
+        <!-- フォームの上部中央にロゴ -->
+        <div class="form-logo">
             <img src="{{ url_for('static', filename='images/02_mark_blue.jpg') }}" alt="ロゴ">
-            <h1>ファイルアップロード</h1>
         </div>
+        <h1>ファイルアップロード</h1>
         <label for="file">アップロードするファイルを選択してください:</label>
-        <input type="file" name="file" id="file" required>
+        <input type="file" name="file" id="file">
         <button type="submit">アップロード</button>
     </form>
 </body>
