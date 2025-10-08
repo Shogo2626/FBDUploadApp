@@ -1,11 +1,12 @@
-from flask import Flask, render_template, request, redirect, session
+from flask import Flask, render_template, request, send_file, session
 import os
 
-# Flaskアプリケーションの初期化
 app = Flask(__name__)
+
+# セッション設定
 app.secret_key = 'your_secret_key'
 
-# ファイルアップロードの保存先ディレクトリの設定
+# ファイル保存ディレクトリ
 UPLOAD_FOLDER = "./uploaded_files"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
@@ -58,107 +59,163 @@ change_areas = [
     "T0-Tw", "Tw-Ctrl", "フィーラ設定", "その他"
 ]
 
-
-# *****************************
-# アップロード画面
-# *****************************
+# ********************************************************************************
+# アップロード処理
+# ********************************************************************************
 @app.route("/", methods=["GET", "POST"])
 def upload_file():
-    """ファイルアップロード画面の処理"""
-    if request.method == "POST":
-        uploaded_file = request.files["file"]
-        if uploaded_file.filename:
-            file_path = os.path.join(UPLOAD_FOLDER, uploaded_file.filename)
-            uploaded_file.save(file_path)  # ファイルを保存
-            session["current_file"] = uploaded_file.filename
-            return redirect("/phenomenon")  # アップロード後、現象入力画面にリダイレクト
-    return render_template("upload.html")
-
-
-# *****************************
-# 現象入力画面
-# *****************************
-@app.route("/phenomenon", methods=["GET", "POST"])
-def phenomenon():
-    """現象入力画面の処理"""
-    if request.method == "POST":
-        # フォームからデータを取得
-        category = request.form["category"]
-        subcategory = request.form["subcategory"]
-        change_area = request.form["change_area"]
-        
-        # セッションに格納された現象データを取得または初期化
-        phenomena = session.get("phenomena", [])
-        phenomena.append((category, subcategory, change_area))
-        session["phenomena"] = phenomena  # 現象データを更新して格納
-    
-    return render_template(
-        "phenomenon.html",
-        file_name=session.get("current_file"),
-        categories=categories,
-        change_areas=change_areas,
-        phenomena=session.get("phenomena", []),
-        enumerate=enumerate  # enumerate関数を渡す
-    )
-
-
-# *****************************
-# 現象データの削除処理
-# *****************************
-@app.route("/delete_phenomenon", methods=["POST"])
-def delete_phenomenon():
-    """特定の現象データを削除する処理"""
     try:
-        # 削除対象のデータのインデックスを受け取る
-        index = int(request.form["data_index"])
-        
-        # セッションの現象データリストからインデックスを指定して削除
-        phenomena = session.get("phenomena", [])
-        if 0 <= index < len(phenomena):  # インデックスが範囲内であることを確認
-            phenomena.pop(index)  # データをリストから削除
-            session["phenomena"] = phenomena  # 更新結果をセッションに保存
-        
-        return redirect("/phenomenon")  # 現象入力画面にリダイレクト
+        if request.method == "POST":
+            uploaded_file = request.files["file"]
+            if uploaded_file.filename:
+                file_path = os.path.join(UPLOAD_FOLDER, uploaded_file.filename)
+                uploaded_file.save(file_path)  # ファイルを保存
+                session["current_file"] = uploaded_file.filename
+                return render_template(
+                    "form.html",
+                    file_name=uploaded_file.filename,
+                    countries=countries,
+                    adjusters=adjusters,
+                    ics_usages=ics_usages,
+                    running_judgments=running_judgments,
+                    quality_judgments=quality_judgments
+                )
+        return render_template("upload.html")
     except Exception as e:
-        return f"サーバーエラー: {str(e)}", 500
+        print("エラー:", str(e))
+        return "サーバーエラー: " + str(e), 500
 
-
-# *****************************
-# 現象データの保存処理
-# *****************************
-@app.route("/save_phenomena", methods=["POST"])
-def save_phenomena():
-    """すべての現象データを保存する処理"""
+# ********************************************************************************
+# 基本情報の保存
+# ********************************************************************************
+@app.route("/save", methods=["POST"])
+def save_data():
     try:
-        # ファイル名を取得
         file_name = session.get("current_file")
         if not file_name:
             raise Exception("ファイル名がセッションに存在しません")
 
-        # ファイルパスを確認し、存在しない場合はエラーを送出
+        # セッションに基本情報を保存
+        basic_info = {
+            "Customer": request.form["customer_name"],
+            "Country": request.form["country"],
+            "Reporter": request.form["reporter"],
+            "Adjuster": request.form["adjuster"],
+            "ICS Usage": request.form["ics_usage"],
+            "Running": request.form["running"],
+            "Quality": request.form["quality"]
+        }
+        session["basic_info"] = basic_info
+        session["phenomena"] = []  # 現象データを初期化
+
+        # 現象入力画面へ遷移
+        return render_template(
+            "phenomenon.html",
+            file_name=file_name,
+            categories=category_mapping,
+            change_areas=change_areas,
+            phenomena=session["phenomena"]
+        )
+    except Exception as e:
+        print("エラー:", str(e))
+        return "サーバーエラー: " + str(e), 500
+
+# ********************************************************************************
+# 現象データ入力処理
+# ********************************************************************************
+@app.route("/phenomenon", methods=["POST"])
+def phenomenon_input():
+    try:
+        file_name = session.get("current_file")
+        if not file_name:
+            raise Exception("ファイル名がセッションに存在しません")
+
+        category = request.form["category"]
+        subcategory = request.form["subcategory"]
+        change_area = request.form["change_area"]
+
+        # 現象データをセッションに追加
+        phenomena = session.get("phenomena", [])
+        phenomena.append((category, subcategory, change_area))
+        session["phenomena"] = phenomena
+
+        return render_template(
+            "phenomenon.html",
+            file_name=file_name,
+            categories=category_mapping,
+            change_areas=change_areas,
+            phenomena=session["phenomena"]
+        )
+    except Exception as e:
+        print("エラー:", str(e))
+        return "サーバーエラー: " + str(e), 500
+
+# ********************************************************************************
+# 現象データ削除処理
+# ********************************************************************************
+@app.route("/remove_phenomenon/<int:index>", methods=["POST"])
+def remove_phenomenon(index):
+    try:
+        phenomena = session.get("phenomena", [])
+        if 0 <= index < len(phenomena):
+            # 対象の現象データを削除
+            del phenomena[index]
+            session["phenomena"] = phenomena
+        
+        # 成功を通知するため204ステータスを返す
+        return "", 204  
+    except Exception as e:
+        print("削除エラー:", str(e))
+        return f"サーバーエラー: {str(e)}", 500
+
+# ********************************************************************************
+# 基本情報と現象データ保存処理
+# ********************************************************************************
+@app.route("/save_phenomena", methods=["POST"])
+def save_phenomena():
+    try:
+        file_name = session.get("current_file")
+        if not file_name:
+            raise Exception("ファイル名がセッションに存在しません")
+
         file_path = os.path.join(UPLOAD_FOLDER, file_name)
         if not os.path.exists(file_path):
             raise Exception(f"元のファイルが存在しません: {file_path}")
 
-        phenomena = session.get("phenomena", [])  # 現象データを取得
+        basic_info = session.get("basic_info", {})
+        phenomena = session.get("phenomena", [])
         processed_file_path = os.path.join(UPLOAD_FOLDER, f"processed_{file_name}")
-        
-        # データを保存するファイルを開く
+
+        # 基本情報のフォーマット
+        basic_info_lines = [
+            '"Customer","{}"\n'.format(basic_info.get("Customer")),
+            '"Country","{}"\n'.format(basic_info.get("Country")),
+            '"Reporter","{}"\n'.format(basic_info.get("Reporter")),
+            '"Adjuster","{}"\n'.format(basic_info.get("Adjuster")),
+            '"ICS Usage","{}"\n'.format(basic_info.get("ICS Usage")),
+            '"Running","{}"\n'.format(basic_info.get("Running")),
+            '"Quality","{}"\n'.format(basic_info.get("Quality"))
+        ]
+
+        # 現象データのフォーマット
+        phenomenon_lines = ['"JAT910-Phenomenon DATA -----------"\n']
+        for category, subcategory, change_area in phenomena:
+            phenomenon_lines.append(f'"{category}","{subcategory}","{change_area}"\n')
+
+        # ファイルにデータを保存
         with open(processed_file_path, "w", encoding="utf-8") as processed_file:
-            for category, subcategory, change_area in phenomena:
-                processed_file.write(f"{category},{subcategory},{change_area}\n")
-        
-        # ファイル保存完了のメッセージ
-        return f"現象データを保存しました: {processed_file_path}"
+            with open(file_path, "r", encoding="utf-8") as original_file:
+                processed_file.writelines(original_file.readlines())  # 元のファイルデータ
+            processed_file.writelines(basic_info_lines)  # 基本情報
+            processed_file.writelines(phenomenon_lines)  # 現象データ
+
+        return send_file(processed_file_path, as_attachment=True)
     except Exception as e:
+        print("エラー:", str(e))
         return f"サーバーエラー: {str(e)}", 500
 
-
-# *****************************
-# アプリケーションの起動
-# *****************************
+# ********************************************************************************
+# アプリ起動
+# ********************************************************************************
 if __name__ == "__main__":
-    # アップロードフォルダが存在しない場合は作成
-    if not os.path.exists(UPLOAD_FOLDER):
-        os.mkdir(UPLOAD_FOLDER)
     app.run(debug=True)
