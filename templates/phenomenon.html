@@ -3,7 +3,102 @@
 <head>
     <meta charset="UTF-8">
     <title>現象入力</title>
+    <style>
+        /* 全体のデザイン */
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(to bottom, #4e79a7, #a0c4ff);
+            color: #333;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        /* フォームコンテナー */
+        form {
+            background-color: #ffffffdd;
+            border-radius: 10px;
+            padding: 30px 40px;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+            width: 100%;
+            max-width: 600px; /* 最大幅 */
+            margin-bottom: 20px; /* 下に余白 */
+        }
+
+        h1, h2 {
+            text-align: center;
+            color: #4e79a7;
+            margin-bottom: 20px;
+        }
+
+        h2 {
+            font-size: 1.25rem;
+        }
+
+        label {
+            display: block;
+            margin-top: 10px;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        input[type="text"], select {
+            width: 100%; /* フル幅で入力フォーム */
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1rem;
+        }
+
+        button {
+            background-color: #4e79a7;
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            font-size: 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%; /* 幅を合わせる */
+        }
+
+        button:hover {
+            background-color: #3a5e88;
+        }
+
+        ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        li {
+            margin-bottom: 10px;
+            background: #f9f9f9;
+            border: 1px solid #ddd;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        .data-container {
+            background-color: #ffffffdd;
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+            max-width: 600px; /* 幅上限 */
+            margin-top: 20px;
+        }
+
+        .data-container ul {
+            max-height: 200px; /* 高さを制限してスクロール可能に */
+            overflow-y: auto;
+        }
+    </style>
     <script>
+        /* 小分類を動的に更新する */
         function updateSubcategories() {
             const category = document.getElementById("category").value;
             const subcategorySelect = document.getElementById("subcategory");
@@ -21,39 +116,47 @@
     </script>
 </head>
 <body>
-    <h1>現象入力</h1>
+    <!-- 現象入力フォーム -->
     <form action="/phenomenon" method="post">
+        <h1>現象入力</h1>
+        
         <label for="category">大分類:</label>
-        <select id="category" name="category" onchange="updateSubcategories()">
+        <select id="category" name="category" onchange="updateSubcategories()" required>
+            <option value="">--選択してください--</option>
             {% for category in categories %}
             <option value="{{ category }}">{{ category }}</option>
             {% endfor %}
         </select>
-        <br><br>
+        
         <label for="subcategory">小分類:</label>
-        <select id="subcategory" name="subcategory">
+        <select id="subcategory" name="subcategory" required>
             <option value="">--選択してください--</option>
         </select>
-        <br><br>
+        
         <label for="change_area">変更箇所:</label>
-        <select id="change_area" name="change_area">
+        <select id="change_area" name="change_area" required>
             {% for area in change_areas %}
             <option value="{{ area }}">{{ area }}</option>
             {% endfor %}
         </select>
-        <br><br>
+        
         <button type="submit">追加</button>
     </form>
-    <h2>追加された現象データ</h2>
-    <ul>
-        {% for category, subcategory, change_area in phenomena %}
-        <li>{{ category }} - {{ subcategory }} - {{ change_area }}</li>
-        {% endfor %}
-    </ul>
-<form action="/save_phenomena" method="post">
-    <!-- file_name を hidden input としてフォームに含める -->
-    <input type="hidden" name="file_name" value="{{ file_name }}">
-    <button type="submit">完了して保存</button>
-</form>
+
+    <!-- 現象データ表示 -->
+    <div class="data-container">
+        <h2>追加された現象データ</h2>
+        <ul>
+            {% for category, subcategory, change_area in phenomena %}
+            <li>{{ category }} - {{ subcategory }} - {{ change_area }}</li>
+            {% endfor %}
+        </ul>
+        
+        <!-- 現象データの保存フォーム -->
+        <form action="/save_phenomena" method="post">
+            <input type="hidden" name="file_name" value="{{ file_name }}">
+            <button type="submit">完了して保存</button>
+        </form>
+    </div>
 </body>
 </html>
