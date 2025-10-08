@@ -163,5 +163,27 @@
             </div>
         </div>
     </div>
+ <!-- JavaScriptコードを追加 -->
+    <script>
+        document.getElementById("category").addEventListener("change", function() {
+            const category = this.value;
+            const subcategorySelect = document.getElementById("subcategory");
+
+            // 小分類をリセット
+            subcategorySelect.innerHTML = '<option value="">-- 選択してください --</option>';
+
+            // `categories` はサーバーサイドから提供されるオブジェクトの一例
+            const categories = {{ categories | tojson | safe }};
+            
+            if (categories[category]) {
+                categories[category].forEach(function(subcategory) {
+                    const option = document.createElement("option");
+                    option.value = subcategory;
+                    option.textContent = subcategory;
+                    subcategorySelect.appendChild(option);
+                });
+            }
+        });
+    </script>
 </body>
 </html>
