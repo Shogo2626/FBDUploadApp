@@ -2,6 +2,8 @@ from flask import Flask, render_template, request, send_file, session
 import os
 
 app = Flask(__name__)
+# Jinja2のテンプレートエンジンで enumerate を利用可能にする
+app.jinja_env.globals.update(enumerate=enumerate)
 
 # セッション設定
 app.secret_key = 'your_secret_key'
