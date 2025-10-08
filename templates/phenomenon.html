@@ -73,7 +73,8 @@
         .data-container ul {
             list-style: none;
             padding: 0;
-            margin: 0; /* 外側の余白を削除*/
+            margin: 0; /* 外側の余白を削除 */
+            width: auto; /* 内容に応じた幅に制限 */
             max-height: 300px; /* スクロール領域 */
             overflow-y: auto;
             border: 1px solid #ddd;
@@ -82,50 +83,45 @@
         }
 
         .data-container li {
-            display: flex;         /* テキストと削除ボタンを横並びに */
-            align-items: center;   /* ボタンとテキストを垂直中央揃え */
-            justify-content: space-between;
-            padding: 5px;          /* 内側の余白を縮小 */
-            border-bottom: 1px solid #ddd;
-        }
-
-        .data-container li:last-child {
-            border-bottom: none;   /* 最後のアイテムの下線を削除 */
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 5px;
+            width: auto; /* 内容に応じた幅に制限 */
         }
 
         .data-container li div {
-            white-space: nowrap;   /* 改行禁止 */
-            overflow: hidden;      /* はみ出した部分を非表示 */
-            text-overflow: ellipsis; /* テキストを省略記号にする */
+            white-space: nowrap; 
+            overflow: hidden; 
+            text-overflow: ellipsis;
         }
 
         .data-container li form {
-            margin: 0;             /* フォームの余白を削除 */
-            padding: 0;            /* フォーム内の余白を削除 */
-            display: inline-block; /* フォームをコンパクトに表示 */
+            margin: 0;
+            padding: 0;
+            display: inline-flex;
+            align-items: center;
+            width: auto; /* フォーム幅制限 */
         }
 
         .data-container li button {
             background-color: #e63946;
-            padding: 3px 8px;      /* ボタン内側の隙間を調整 */
+            padding: 3px 8px; 
             font-size: 0.8rem;
-            border-radius: 4px;    /* ボタンの角を少し丸くする */
-            margin: 0;             /* 外側の余白を削除 */
-            border: none;          /* ボタン枠線を削除 */
-            outline: none;         /* フォーカス時の枠線を削除 */
-            width: auto;           /* ボタンの幅を内容に合わせる */
-            height: auto;          /* ボタンの高さも適正化 */
-            box-sizing: border-box; /* サイズ計算を内部要素に応じて調整 */
+            border-radius: 4px;
+            border: none;
+            width: auto; 
+            height: auto;
+            margin: 0;
         }
 
         .data-container li button:hover {
-            background-color: #c72c3c; /* ボタンホバー時の色変更 */
+            background-color: #c72c3c;
         }
 
         /* 完了して保存 */
         .save-button-container {
             text-align: right;
-            margin-top: 20px;
         }
     </style>
 </head>
@@ -163,11 +159,9 @@
             <ul>
                 {% for idx, (category, subcategory, change_area) in enumerate(phenomena) %}
                 <li>
-                    <!-- 改行を防止してデータを表示 -->
                     <div>
                         {{ category }} - {{ subcategory }} - {{ change_area }}
                     </div>
-                    <!-- 削除ボタン -->
                     <form action="/delete_phenomenon" method="post">
                         <input type="hidden" name="data_index" value="{{ idx }}">
                         <button type="submit">削除</button>
@@ -195,9 +189,7 @@
             // 小分類をリセット
             subcategorySelect.innerHTML = '<option value="">-- 選択してください --</option>';
 
-            // `categories` はサーバーサイドから提供されるオブジェクトの一例
             const categories = {{ categories | tojson | safe }};
-            
             if (categories[category]) {
                 categories[category].forEach(function(subcategory) {
                     const option = document.createElement("option");
